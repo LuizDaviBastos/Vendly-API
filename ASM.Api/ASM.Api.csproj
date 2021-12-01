@@ -11,7 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AfterSalesMessage.Services\AfterSalesMessage.Services.csproj" />
+    <ProjectReference Include="..\ASM.Imp\ASM.Imp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Helpers\" />
   </ItemGroup>
 
 </Project>

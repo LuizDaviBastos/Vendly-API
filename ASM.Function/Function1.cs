@@ -3,7 +3,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 
-namespace AfterSalesMessage.Function
+namespace ASM.Core.Function
 {
     public class Function1
     {
