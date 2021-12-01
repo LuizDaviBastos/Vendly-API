@@ -16,9 +16,9 @@ namespace ASM.Imp.Services
             restClient = new RestClient("https://api.mercadolibre.com");
         }
 
-        public string GetAuthUrl()
+        public string GetAuthUrl(string countryId)
         {
-            return MLConstants.AuthUrl;
+            return MLConstants.GetAuthUrlByCountryId(countryId);
         }
 
         public async Task<AccessToken> GetAccessTokenAsync(string code)
@@ -82,9 +82,10 @@ namespace ASM.Imp.Services
         {
             var order = new Order();
             order.Success = false;
-            //https://api.mercadolibre.com/orders/5062008768
             RestRequest request = new RestRequest($"/orders/{notification.OrderId}", Method.GET);
             request.AddHeader("Authorization", $"Bearer {accessToken}");
+
+            //TODO get accessToken by SellerId 1030856711
 
             var result = await restClient.ExecuteAsync<Order>(request);
             if (result.IsSuccessful)

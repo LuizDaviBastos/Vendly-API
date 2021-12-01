@@ -2,9 +2,20 @@
 {
     public class MLConstants
     {
-        public const string SecretKey = "JOZNSOfzJAHBcOW09g4RuSnmrGYX4NEd";
-        public const long AppId = 728065690975054;
-        public const string RedirectUrl = "https://88a3-177-85-44-254.ngrok.io/api/Auth/GetAccessToken";
-        public static string AuthUrl { get => string.Format("https://auth.mercadolivre.com.br/authorization?response_type=code&client_id={0}&redirect_uri={1}", AppId, RedirectUrl); }
+        public const string SecretKey = "aDRd0VLWNbzH5qy4ZVNDyrWi0eqh3PCb";
+        public const long AppId = 8710476337491405;
+        public const string RedirectUrl = "https://fe56-177-85-44-254.ngrok.io/api/Auth/GetAccessToken";
+        private static string AuthUrl { get => $"{{0}}/authorization?response_type=code&client_id={AppId}&redirect_uri={RedirectUrl}"; }
+        public static string GetAuthUrlByCountryId(string countryId)
+        {
+            var auth = string.Format(AuthUrl, Countries[countryId.ToUpper()]);
+            return auth;
+        }
+
+        private static Dictionary<string, string> Countries = new Dictionary<string, string>(new List<KeyValuePair<string, string>>()
+        {
+            new KeyValuePair<string, string>("AR","https://auth.mercadolibre.com.ar"),
+            new KeyValuePair<string, string>("BR","https://auth.mercadolivre.com.br"),
+        });
     }
 }

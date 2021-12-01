@@ -13,9 +13,11 @@ namespace ASM.Api.Controllers
         }
 
         [HttpGet("GetAuthUrl")]
-        public IActionResult GetAuthUrl()
+        public IActionResult GetAuthUrl(string countryId)
         {
-            return Ok(meliService.GetAuthUrl());
+            if (string.IsNullOrEmpty(countryId)) return BadRequest("invalid country");
+
+            return Ok(meliService.GetAuthUrl(countryId));
         }
 
         [HttpGet("GetAccessToken")]
