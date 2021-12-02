@@ -12,7 +12,7 @@
             return auth;
         }
 
-        private static Dictionary<string, string> Countries = new Dictionary<string, string>(new List<KeyValuePair<string, string>>()
+        public static Dictionary<string, string> Countries = new Dictionary<string, string>(new List<KeyValuePair<string, string>>()
         {
             new KeyValuePair<string, string>("AR","https://auth.mercadolibre.com.ar"),
             new KeyValuePair<string, string>("BR","https://auth.mercadolivre.com.br"),

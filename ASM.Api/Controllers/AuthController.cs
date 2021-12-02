@@ -1,4 +1,5 @@
 ﻿using ASM.Core.Services;
+using ASM.Imp.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ASM.Api.Controllers
@@ -15,7 +16,7 @@ namespace ASM.Api.Controllers
         [HttpGet("GetAuthUrl")]
         public IActionResult GetAuthUrl(string countryId)
         {
-            if (string.IsNullOrEmpty(countryId)) return BadRequest("invalid country");
+            if (string.IsNullOrEmpty(countryId) || !MLConstants.Countries.ContainsKey(countryId)) return BadRequest("invalid country");
 
             return Ok(meliService.GetAuthUrl(countryId));
         }

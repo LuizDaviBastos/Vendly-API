@@ -18,7 +18,7 @@ namespace ASM.Core.Function
         public void Run([QueueTrigger("process-order-notification")]NotificationTrigger notification, ILogger log)
         {
             /*
-             TODO - 
+             TODO - AzFunction
                 1 - verify if this is the first message
                 2 - Get message by sellerId
                 3 - Build string message 
