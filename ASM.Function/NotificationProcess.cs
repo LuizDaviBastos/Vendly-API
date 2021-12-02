@@ -42,10 +42,6 @@ namespace ASM.Core.Function
                 });
                 log.LogInformation($"message sent successfully to BuyerId:{order.buyer.id}");
             }
-            else
-            {
-                log.LogError($"message has not sent to BuyerId:{order.buyer.id}");
-            }
             
         }
     }
