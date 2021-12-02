@@ -38,8 +38,13 @@ namespace ASM.Core.Function
                     BuyerId = order.buyer.id,
                     Message = "Test",
                     SellerId = order.seller.id,
-                    PackId = order.pack_id
+                    PackId = notification.OrderId
                 });
+                log.LogInformation($"message sent successfully to BuyerId:{order.buyer.id}");
+            }
+            else
+            {
+                log.LogError($"message has not sent to BuyerId:{order.buyer.id}");
             }
             
         }
