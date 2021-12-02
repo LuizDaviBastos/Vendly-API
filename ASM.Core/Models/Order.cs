@@ -31,8 +31,19 @@ namespace ASM.Core.Models
         public List<string> tags { get; set; }
         public Feedback feedback { get; set; }
         public Buyer buyer { get; set; }
-        public Seller seller { get; set; }
+        public OrderSeller seller { get; set; }
         public Taxes taxes { get; set; }
+
+        public class OrderSeller
+        {
+            public int id { get; set; }
+            public string nickname { get; set; }
+            public string email { get; set; }
+            public string first_name { get; set; }
+            public string last_name { get; set; }
+            public Phone phone { get; set; }
+            public AlternativePhone alternative_phone { get; set; }
+        }
     }
 
     public class Coupon
@@ -153,16 +164,7 @@ namespace ASM.Core.Models
         public string number { get; set; }
     }
 
-    public class Seller
-    {
-        public int id { get; set; }
-        public string nickname { get; set; }
-        public string email { get; set; }
-        public string first_name { get; set; }
-        public string last_name { get; set; }
-        public Phone phone { get; set; }
-        public AlternativePhone alternative_phone { get; set; }
-    }
+   
 
     public class Taxes
     {

@@ -14,6 +14,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\ASM.Core\ASM.Core.csproj" />
+	  <ProjectReference Include="..\ASM.Data\ASM.Data.csproj" />
 	</ItemGroup>
 	
 </Project>

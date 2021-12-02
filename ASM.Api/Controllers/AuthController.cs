@@ -25,11 +25,5 @@ namespace ASM.Api.Controllers
         {
             return Ok(await meliService.GetAccessTokenAsync(code));
         }
-        
-        [HttpGet("RefreshAccessToken")]
-        public async Task<IActionResult> RefreshAccessToken(string refreshToken)
-        {
-            return Ok(await meliService.RefreshAccessTokenAsync(refreshToken));
-        }
     }
 }

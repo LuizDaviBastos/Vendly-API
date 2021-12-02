@@ -1,5 +1,7 @@
 ﻿using ASM.Core.Models;
+using ASM.Core.Repositories;
 using ASM.Core.Services;
+using ASM.Data.Entities;
 using ASM.Imp.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,9 +13,11 @@ namespace ASM.Imp.Services
     {
         private readonly RestClient restClient;
         private string accessToken = string.Empty;
-        public MeliService()
+        private readonly IRepository<Seller> sellerRepository;
+        public MeliService(IRepository<Seller> sellerRepository)
         {
             restClient = new RestClient("https://api.mercadolibre.com");
+            this.sellerRepository = sellerRepository;
         }
 
         public string GetAuthUrl(string countryId)
@@ -41,20 +45,14 @@ namespace ASM.Imp.Services
             {
                 accessToken = result.Data;
                 accessToken.Success = true;
-            }
-            else
-            {
-                var content = JsonConvert.DeserializeObject<JObject>(result.Content);
-                if((int?)content["status"] == 400)
-                {
-                    //todo refresh token
-                }
+
+                sellerRepository.AddOrUpdate(new Seller(accessToken));
             }
 
             return accessToken;
         }
 
-        public async Task<AccessToken> RefreshAccessTokenAsync(string refreshToken)
+        public async Task<AccessToken> RefreshAccessTokenAsync(string refreshToken, long sellerId)
         {
             AccessToken accessToken = new AccessToken();
             accessToken.Success = false;
@@ -78,20 +76,28 @@ namespace ASM.Imp.Services
             return accessToken;
         }
 
-        public async Task<Order> GetOrderDetailsAsync(NotificationTrigger notification)
+        public async Task<Order> GetOrderDetailsAsync(NotificationTrigger notification, bool tryAgayn = true)
         {
             var order = new Order();
             order.Success = false;
+
+            var seller = sellerRepository.GetQueryable(x => x.SellerId == notification.user_id).FirstOrDefault();
+            if (seller == null) return order;
+
+            this.accessToken = seller.AccessToken;
+
             RestRequest request = new RestRequest($"/orders/{notification.OrderId}", Method.GET);
             request.AddHeader("Authorization", $"Bearer {accessToken}");
-
-            //TODO get accessToken by SellerId 1030856711
-
+            
             var result = await restClient.ExecuteAsync<Order>(request);
             if (result.IsSuccessful)
             {
                 order = result.Data;
                 order.Success = true;
+            }
+            else if(tryAgayn)
+            {
+               return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetOrderDetailsAsync(notification, false));
             }
 
             return order;
@@ -115,6 +121,16 @@ namespace ASM.Imp.Services
             });
 
             var result = await restClient.ExecuteAsync(request);
+        }
+
+        public async Task<TResult> RefreshTokenAndTryAgain<TResult>(string refreshToken, long sellerId, Func<Task<TResult>> func)
+        {
+            var accessToken = await this.RefreshAccessTokenAsync(refreshToken, sellerId);
+            this.accessToken = accessToken.access_token;
+
+            sellerRepository.AddOrUpdate(new Seller(accessToken));
+
+            return await func();
         }
     }
 

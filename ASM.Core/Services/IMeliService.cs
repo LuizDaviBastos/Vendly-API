@@ -6,8 +6,9 @@ namespace ASM.Core.Services
     {
         public string GetAuthUrl(string countryId);
         public Task<AccessToken> GetAccessTokenAsync(string code);
-        public Task<AccessToken> RefreshAccessTokenAsync(string refreshToken);
-        public Task<Order> GetOrderDetailsAsync(NotificationTrigger notification);
-        public Task SendMessageToBuyerAsync(SendMessage sendMessage);
+        public Task<AccessToken> RefreshAccessTokenAsync(string refreshToken, long sellerId);
+        public Task<Order> GetOrderDetailsAsync(NotificationTrigger notification, bool tryAgayn = true);
+        public Task SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgayn = true);
+        public Task<TResult> RefreshTokenAndTryAgain<TResult>(string refreshToken, long sellerId, Func<Task<TResult>> func);
     }
 }
