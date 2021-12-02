@@ -18,13 +18,13 @@ namespace ASM.Api.Controllers
         }
 
         [HttpPost("NotificationTrigger")]
-        public async Task NotificationTrigger([FromBody]NotificationTrigger notification)
+        public async Task<IActionResult> NotificationTrigger([FromBody]NotificationTrigger notification)
         {
             if (notification.IsOrderV2)
             {
-                var result = await meliService.GetOrderDetailsAsync(notification);
                 await storageService.SendMessageAsync("process-order-notification", notification);
             }
+            return Ok();
         }
 
         //ngrok http -host-header=localhost https://localhost:7024/

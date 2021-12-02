@@ -4,6 +4,7 @@ using ASM.Core.Services;
 using ASM.Data.Common;
 using ASM.Data.Contexts;
 using ASM.Data.Entities;
+using ASM.Imp.Models;
 using ASM.Imp.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,8 +16,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IStorageService, StorageService>();
 builder.Services.AddScoped<IMeliService, MeliService>();
 builder.Services.AddScoped<IRepository<Seller>, SellerRepository>();
-
-builder.Services.AddDbContext<AsmContext>(x => x.UseSqlite("Data source =./AsmDb.db"));
+builder.Services.AddDbContext<AsmContext>(x => x.UseSqlite(builder.Configuration["ConnectionString"]));
+builder.Services.AddSingleton(x => builder.Configuration.Get<AsmConfiguration>());
 
 var app = builder.Build();
 

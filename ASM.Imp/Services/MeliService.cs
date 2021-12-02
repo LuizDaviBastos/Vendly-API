@@ -103,7 +103,7 @@ namespace ASM.Imp.Services
             return order;
         }
 
-        public async Task SendMessageToBuyerAsync(SendMessage sendMessage)
+        public async Task SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgayn = true)
         {
             RestRequest request = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.SellerId}", Method.POST);
             request.AddParameter("application_id", MLConstants.AppId)
