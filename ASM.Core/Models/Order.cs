@@ -14,7 +14,7 @@ namespace ASM.Core.Models
         public DateTime last_updated { get; set; }
         public object manufacturing_ending_date { get; set; }
         public object comment { get; set; }
-        public object pack_id { get; set; }
+        public long pack_id { get; set; }
         public object pickup_id { get; set; }
         public object fulfilled { get; set; }
         public List<object> mediations { get; set; }

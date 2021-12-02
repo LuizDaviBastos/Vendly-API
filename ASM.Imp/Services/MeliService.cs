@@ -3,8 +3,6 @@ using ASM.Core.Repositories;
 using ASM.Core.Services;
 using ASM.Data.Entities;
 using ASM.Imp.Helpers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using RestSharp;
 
 namespace ASM.Imp.Services
@@ -76,7 +74,7 @@ namespace ASM.Imp.Services
             return accessToken;
         }
 
-        public async Task<Order> GetOrderDetailsAsync(NotificationTrigger notification, bool tryAgayn = true)
+        public async Task<Order> GetOrderDetailsAsync(NotificationTrigger notification, bool tryAgain = true)
         {
             var order = new Order();
             order.Success = false;
@@ -95,7 +93,7 @@ namespace ASM.Imp.Services
                 order = result.Data;
                 order.Success = true;
             }
-            else if(tryAgayn)
+            else if(tryAgain)
             {
                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetOrderDetailsAsync(notification, false));
             }
@@ -103,10 +101,16 @@ namespace ASM.Imp.Services
             return order;
         }
 
-        public async Task SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgayn = true)
+        public async Task<bool> SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgain = true)
         {
+            var seller = sellerRepository.GetQueryable(x => x.SellerId == sendMessage.SellerId).FirstOrDefault();
+            if (seller == null) return false;
+
+            this.accessToken = seller.AccessToken;
+
             RestRequest request = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.SellerId}", Method.POST);
-            request.AddParameter("application_id", MLConstants.AppId)
+            request.AddHeader("Authorization", $"Bearer {this.accessToken}")
+            .AddParameter("application_id", MLConstants.AppId)
             .AddJsonBody(new
             {
                 from = new
@@ -121,6 +125,16 @@ namespace ASM.Imp.Services
             });
 
             var result = await restClient.ExecuteAsync(request);
+            if (result.IsSuccessful)
+            {
+                return true;
+            }
+            else if(tryAgain)
+            {
+                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await SendMessageToBuyerAsync(sendMessage, false));
+            }
+
+            return false;
         }
 
         public async Task<TResult> RefreshTokenAndTryAgain<TResult>(string refreshToken, long sellerId, Func<Task<TResult>> func)
