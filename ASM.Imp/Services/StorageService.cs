@@ -19,11 +19,11 @@ namespace ASM.Imp.Services
         {
             try
             {
-                QueueClient queueClient = new QueueClient(configuration.AzureStorageConnection, queueName);
-                var message = JsonConvert.SerializeObject(item);
-                //await queueClient.SendMessageAsync(new BinaryData(Encoding.UTF8.GetBytes(message)));
-                var data = new BinaryData(Encoding.UTF8.GetBytes(message));
-                await queueClient.SendMessageAsync(message);
+                QueueClient queueClient = new QueueClient(configuration.AzureWebJobsStorage, queueName);
+                await queueClient.CreateIfNotExistsAsync();
+                var json = JsonConvert.SerializeObject(item);
+                var bytes = Encoding.UTF8.GetBytes(json);
+                await queueClient.SendMessageAsync(Convert.ToBase64String(bytes));
             }
             catch (Exception ex)
             {

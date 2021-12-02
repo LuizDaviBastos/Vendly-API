@@ -8,7 +8,7 @@ namespace ASM.Imp.Models
 {
     public class AsmConfiguration
     {
-        public string? AzureStorageConnection { get; set; }
+        public string? AzureWebJobsStorage { get; set; }
         public string? ConnectionString { get; set; }
     }
 }
