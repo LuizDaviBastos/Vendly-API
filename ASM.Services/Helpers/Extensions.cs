@@ -19,6 +19,7 @@ namespace ASM.Services.Helpers
             services.AddScoped<IRepository<Seller>, SellerRepository>();
             services.AddDbContext<AsmContext>(x => x.UseSqlite(configuration["ConnectionString"]));
             services.AddSingleton(x => configuration.Get<AsmConfiguration>());
+
             return services;
         }
     }

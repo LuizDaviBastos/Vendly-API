@@ -9,6 +9,6 @@ namespace ASM.Services.Interfaces
         public Task<AccessToken> RefreshAccessTokenAsync(string refreshToken, long sellerId);
         public Task<Order> GetOrderDetailsAsync(NotificationTrigger notification, bool tryAgain = true);
         public Task<bool> SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgain = true);
-        public Task<TResult> RefreshTokenAndTryAgain<TResult>(string refreshToken, long sellerId, Func<Task<TResult>> func);
+        public Task<bool> IsFirstSellerMessage(SendMessage sendMessage, bool tryAgain = true);
     }
 }
