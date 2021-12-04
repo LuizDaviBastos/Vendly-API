@@ -1,6 +1,5 @@
-﻿using ASM.Core.Models;
-using ASM.Core.Services;
-using ASM.Imp.Services;
+﻿using ASM.Services.Interfaces;
+using ASM.Services.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ASM.Api.Controllers

@@ -1,15 +1,14 @@
 ﻿using ASM.Core.Repositories;
-using ASM.Core.Services;
 using ASM.Data.Common;
 using ASM.Data.Contexts;
 using ASM.Data.Entities;
-using ASM.Imp.Models;
-using ASM.Imp.Services;
+using ASM.Services.Interfaces;
+using ASM.Services.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ASM.Imp.Helpers
+namespace ASM.Services.Helpers
 {
     public static class Extensions
     {

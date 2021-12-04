@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ASM.Core.Services
+namespace ASM.Services.Interfaces
 {
     public interface IStorageService
     {

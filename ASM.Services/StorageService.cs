@@ -1,11 +1,10 @@
-﻿using ASM.Core.Services;
-using ASM.Imp.Models;
+﻿using ASM.Services.Interfaces;
+using ASM.Services.Models;
 using Azure.Storage.Queues;
-using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Text;
 
-namespace ASM.Imp.Services
+namespace ASM.Services
 {
     public class StorageService : IStorageService
     {

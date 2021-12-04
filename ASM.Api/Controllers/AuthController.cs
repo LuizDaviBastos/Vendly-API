@@ -1,5 +1,6 @@
-﻿using ASM.Core.Services;
-using ASM.Imp.Helpers;
+﻿using ASM.Services.Helpers;
+using ASM.Services.Interfaces;
+using ASM.Services.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ASM.Api.Controllers
@@ -8,15 +9,18 @@ namespace ASM.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IMeliService meliService;
-        public AuthController(IMeliService meliService)
+        private readonly AsmConfiguration asmConfiguration;
+
+        public AuthController(IMeliService meliService, AsmConfiguration asmConfiguration)
         {
             this.meliService = meliService;
+            this.asmConfiguration = asmConfiguration;
         }
 
         [HttpGet("GetAuthUrl")]
         public IActionResult GetAuthUrl(string countryId)
         {
-            if (string.IsNullOrEmpty(countryId) || !MLConstants.Countries.ContainsKey(countryId)) return BadRequest("invalid country");
+            if (string.IsNullOrEmpty(countryId) || !asmConfiguration.Countries.ContainsKey(countryId.ToUpper())) return BadRequest("invalid country");
 
             return Ok(meliService.GetAuthUrl(countryId));
         }

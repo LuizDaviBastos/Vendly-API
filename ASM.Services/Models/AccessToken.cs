@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace ASM.Core.Models
+namespace ASM.Services.Models
 {
     public class AccessToken : RequestResponseBase
     {

@@ -1,4 +1,4 @@
-﻿namespace ASM.Core.Models
+﻿namespace ASM.Services.Models
 {
     public class SendMessage : RequestResponseBase
     {

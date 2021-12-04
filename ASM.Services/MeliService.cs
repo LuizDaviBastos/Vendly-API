@@ -1,27 +1,37 @@
-﻿using ASM.Core.Models;
-using ASM.Core.Repositories;
-using ASM.Core.Services;
+﻿using ASM.Core.Repositories;
 using ASM.Data.Entities;
-using ASM.Imp.Helpers;
+using ASM.Services.Helpers;
+using ASM.Services.Interfaces;
+using ASM.Services.Models;
 using RestSharp;
 
-namespace ASM.Imp.Services
+namespace ASM.Services
 {
     public class MeliService : IMeliService
     {
-        private readonly RestClient restClient;
         private string accessToken = string.Empty;
+        private readonly RestClient restClient;
         private readonly IRepository<Seller> sellerRepository;
-        public MeliService(IRepository<Seller> sellerRepository)
+        private readonly AsmConfiguration asmConfiguration;
+
+        public MeliService(IRepository<Seller> sellerRepository, AsmConfiguration asmConfiguration)
         {
             restClient = new RestClient("https://api.mercadolibre.com");
             this.sellerRepository = sellerRepository;
+            this.asmConfiguration = asmConfiguration;
         }
-
+       
         public string GetAuthUrl(string countryId)
         {
-            return MLConstants.GetAuthUrlByCountryId(countryId);
+            var authUrl = $"{{0}}/authorization?response_type=code&client_id={asmConfiguration.AppId}&redirect_uri={asmConfiguration.RedirectUrl}";
+            return string.Format(authUrl, asmConfiguration.Countries?[countryId.ToUpper()]); 
         }
+
+       /* private Dictionary<string, string> Countries = new Dictionary<string, string>(new List<KeyValuePair<string, string>>()
+        {
+            new KeyValuePair<string, string>("AR","https://auth.mercadolibre.com.ar"),
+            new KeyValuePair<string, string>("BR","https://auth.mercadolivre.com.br"),
+        });*/
 
         public async Task<AccessToken> GetAccessTokenAsync(string code)
         {
@@ -32,10 +42,10 @@ namespace ASM.Imp.Services
             request.AddJsonBody(new
             {
                 grant_type = "authorization_code",
-                client_id = MLConstants.AppId,
-                client_secret = MLConstants.SecretKey,
+                client_id = asmConfiguration.AppId,
+                client_secret = asmConfiguration.SecretKey,
                 code = code,
-                redirect_uri = MLConstants.RedirectUrl
+                redirect_uri = asmConfiguration.RedirectUrl
             });
 
             var result = await restClient.ExecuteAsync<AccessToken>(request);
@@ -44,7 +54,12 @@ namespace ASM.Imp.Services
                 accessToken = result.Data;
                 accessToken.Success = true;
 
-                sellerRepository.AddOrUpdate(new Seller(accessToken));
+                sellerRepository.AddOrUpdate(new Seller
+                {
+                    AccessToken = accessToken.access_token,
+                    SellerId = accessToken.user_id,
+                    RefreshToken = accessToken.refresh_token
+                });
             }
 
             return accessToken;
@@ -59,8 +74,8 @@ namespace ASM.Imp.Services
             request.AddJsonBody(new
             {
                 grant_type = "refresh_token",
-                client_id = MLConstants.AppId,
-                client_secret = MLConstants.SecretKey,
+                client_id = asmConfiguration.AppId,
+                client_secret = asmConfiguration.SecretKey,
                 refresh_token = refreshToken,
             });
 
@@ -86,16 +101,16 @@ namespace ASM.Imp.Services
 
             RestRequest request = new RestRequest($"/orders/{notification.OrderId}", Method.GET);
             request.AddHeader("Authorization", $"Bearer {accessToken}");
-            
+
             var result = await restClient.ExecuteAsync<Order>(request);
             if (result.IsSuccessful)
             {
                 order = result.Data;
                 order.Success = true;
             }
-            else if(tryAgain)
+            else if (tryAgain)
             {
-               return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetOrderDetailsAsync(notification, false));
+                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetOrderDetailsAsync(notification, false));
             }
 
             return order;
@@ -110,7 +125,7 @@ namespace ASM.Imp.Services
 
             RestRequest request = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.SellerId}", Method.POST);
             request.AddHeader("Authorization", $"Bearer {this.accessToken}")
-            .AddParameter("application_id", MLConstants.AppId)
+            .AddParameter("application_id", asmConfiguration.AppId)
             .AddJsonBody(new
             {
                 from = new
@@ -129,7 +144,7 @@ namespace ASM.Imp.Services
             {
                 return true;
             }
-            else if(tryAgain)
+            else if (tryAgain)
             {
                 return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await SendMessageToBuyerAsync(sendMessage, false));
             }
@@ -142,11 +157,17 @@ namespace ASM.Imp.Services
             var accessToken = await this.RefreshAccessTokenAsync(refreshToken, sellerId);
             this.accessToken = accessToken.access_token;
 
-            sellerRepository.AddOrUpdate(new Seller(accessToken));
+            sellerRepository.AddOrUpdate(new Seller
+            {
+                AccessToken = accessToken.access_token,
+                SellerId = accessToken.user_id,
+                RefreshToken = accessToken.refresh_token
+            });
 
             return await func();
         }
+
     }
 
-    
+
 }

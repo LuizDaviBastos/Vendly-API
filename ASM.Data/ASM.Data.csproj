@@ -19,8 +19,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ASM.Core\ASM.Core.csproj" />
-  </ItemGroup>
-
 </Project>

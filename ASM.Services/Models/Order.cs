@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ASM.Core.Models
+﻿namespace ASM.Services.Models
 {
     public class Order : RequestResponseBase
     {

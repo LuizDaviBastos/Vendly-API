@@ -1,6 +1,6 @@
-﻿using ASM.Core.Models;
+﻿using ASM.Services.Models;
 
-namespace ASM.Core.Services
+namespace ASM.Services.Interfaces
 {
     public interface IMeliService
     {

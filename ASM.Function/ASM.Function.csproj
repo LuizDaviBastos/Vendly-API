@@ -9,9 +9,8 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ASM.Core\ASM.Core.csproj" />
     <ProjectReference Include="..\ASM.Data\ASM.Data.csproj" />
-    <ProjectReference Include="..\ASM.Imp\ASM.Imp.csproj" />
+    <ProjectReference Include="..\ASM.Services\ASM.Services.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

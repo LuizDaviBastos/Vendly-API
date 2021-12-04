@@ -1,7 +1,7 @@
-using ASM.Core.Models;
 using ASM.Core.Repositories;
-using ASM.Core.Services;
 using ASM.Data.Entities;
+using ASM.Services.Interfaces;
+using ASM.Services.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;

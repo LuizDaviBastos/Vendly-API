@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ASM.Core.Models
+﻿namespace ASM.Services.Models
 {
     public class NotificationTrigger
     {
-        public string topic { get; set; }
-        public string resource { get; set; }
+        public string? topic { get; set; }
+        public string? resource { get; set; }
         public int user_id { get; set; }
         public long application_id { get; set; }
         public DateTime? sent { get; set; }
