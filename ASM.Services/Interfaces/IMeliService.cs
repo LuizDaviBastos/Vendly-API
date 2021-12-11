@@ -10,5 +10,6 @@ namespace ASM.Services.Interfaces
         public Task<Order> GetOrderDetailsAsync(NotificationTrigger notification, bool tryAgain = true);
         public Task<bool> SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgain = true);
         public Task<bool> IsFirstSellerMessage(SendMessage sendMessage, bool tryAgain = true);
+        public Task<SellerInfo> GetSellerInfo(string accessToken, bool tryAgain = true);
     }
 }

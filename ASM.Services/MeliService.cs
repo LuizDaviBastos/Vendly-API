@@ -55,6 +55,11 @@ namespace ASM.Services
                     RefreshToken = accessToken.refresh_token
                 });
             }
+            else
+            {
+                accessToken.Success = false;
+                accessToken.Message = result.Content;
+            }
 
             return accessToken;
         }
@@ -79,6 +84,11 @@ namespace ASM.Services
                 accessToken = result.Data;
                 accessToken.Success = true;
             }
+            else
+            {
+                accessToken.Success = false;
+                accessToken.Message = result.Content;
+            }
 
             return accessToken;
         }
@@ -102,6 +112,11 @@ namespace ASM.Services
             else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest)
             {
                 return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetOrderDetailsAsync(notification, false));
+            }
+            else
+            {
+                order.Success = false;
+                order.Message = result.Content;
             }
 
             return order;
@@ -161,6 +176,27 @@ namespace ASM.Services
             throw new Exception(result.Content);
         }
 
+        public async Task<SellerInfo> GetSellerInfo(string accessToken, bool tryAgain = true)
+        {
+            if (!SetAccessToken(accessToken, out Seller seller)) throw new Exception($"SetAccessToken Error{(seller.Id == 0 ? ". Seller not found" : "")}");
+
+            RestRequest restRequest = new RestRequest($"/users/me", Method.GET);
+            restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}");
+
+            var result = await restClient.ExecuteAsync<SellerInfo>(restRequest);
+            if (result.IsSuccessful)
+            {
+                result.Data.Success = true;
+                return result.Data;
+            }
+            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetSellerInfo(this.accessToken, false));
+            }
+            
+            throw new Exception(result.Content);
+        }
+
         private async Task<TResult> RefreshTokenAndTryAgain<TResult>(string refreshToken, long sellerId, Func<Task<TResult>> func)
         {
             var accessToken = await this.RefreshAccessTokenAsync(refreshToken, sellerId);
@@ -187,6 +223,24 @@ namespace ASM.Services
             if (seller == null) return false;
 
             seller.SellerId = sellerId;
+            this.accessToken = seller.AccessToken;
+
+            return true;
+        }
+
+
+        private bool SetAccessToken(string accessToken, out Seller seller)
+        {
+            seller = sellerRepository.GetQueryable(x => x.AccessToken == accessToken).Select(x => new Seller
+            {
+                RefreshToken = x.RefreshToken,
+                SellerId = x.SellerId,
+                AccessToken = x.AccessToken
+            }).FirstOrDefault();
+
+            if (seller == null) return false;
+
+            seller.SellerId = seller.SellerId;
             this.accessToken = seller.AccessToken;
 
             return true;

@@ -17,7 +17,7 @@ namespace ASM.Services.Helpers
             services.AddScoped<IStorageService, StorageService>();
             services.AddScoped<IMeliService, MeliService>();
             services.AddScoped<IRepository<Seller>, SellerRepository>();
-            services.AddDbContext<AsmContext>(x => x.UseSqlite(configuration["ConnectionString"]));
+            services.AddDbContext<AsmContext>(x => x.UseSqlServer(configuration["ConnectionString"]));
             services.AddSingleton(x => configuration.Get<AsmConfiguration>());
 
             return services;

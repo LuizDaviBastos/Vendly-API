@@ -2,6 +2,8 @@
 using ASM.Data.Contexts;
 using ASM.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace ASM.Data.Common

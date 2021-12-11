@@ -1,10 +1,10 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "AzureWebJobsStorage": "AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=schedulerml;AccountKey=zOZ2lz9epWCX0dg//Z5ENvn0HOpbGF+isw3819I9n6JTN6U9iGIpPdgGk44gye4yimDyZceENYFYjXFusJZkfw==;BlobEndpoint=https://schedulerml.blob.core.windows.net/;QueueEndpoint=https://schedulerml.queue.core.windows.net/;TableEndpoint=https://schedulerml.table.core.windows.net/;FileEndpoint=https://schedulerml.file.core.windows.net/;",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-
-    "ConnectionString": "Data source =C:\\Users\\davi-\\source\\repos\\ASM\\ASM.Api\\AsmDb.db",
+    //"ConnectionString": "Data source =C:\\Users\\davi-\\source\\repos\\ASM\\ASM.Api\\AsmDb.db",
+    "ConnectionString": "Data Source=asm-server.database.windows.net;Initial Catalog=prod-asmdb;User ID=luizdavi;Password=80849903Dd;Connect Timeout=30;Encrypt=True;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False",
     "SecretKey": "aDRd0VLWNbzH5qy4ZVNDyrWi0eqh3PCb",
     "AppId": 8710476337491405,
     "RedirectUrl": "https://fe56-177-85-44-254.ngrok.io/api/Auth/GetAccessToken",
