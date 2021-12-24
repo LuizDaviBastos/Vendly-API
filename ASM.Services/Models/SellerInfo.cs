@@ -18,13 +18,11 @@
         public object logo { get; set; }
         public long points { get; set; }
         public string site_id { get; set; }
-        public string permalink { get; set; }/*
+        public string permalink { get; set; }
         public List<string> shipping_modes { get; set; }
         public string seller_experience { get; set; }
         public SellerReputation seller_reputation { get; set; }
-        public BuyerReputation buyer_reputation { get; set; }
-        public Status status { get; set; }
-        public Credit credit { get; set; }*/
+        public Thumbnail thumbnail { get; set; }
     }
 
     public class Identification
@@ -145,6 +143,11 @@
     {
         public int consumed { get; set; }
         public string credit_level_id { get; set; }
+    }
+
+    public class Thumbnail
+    {
+        public string picture_url { get; set; }
     }
 
 

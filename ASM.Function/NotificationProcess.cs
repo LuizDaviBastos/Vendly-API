@@ -43,7 +43,7 @@ namespace ASM.Core.Function
             if (isFirstSellerMessage)
             {
                 var order = await meliService.GetOrderDetailsAsync(notification);
-                if (order.Success)
+                if (order.Success ?? false)
                 {
                     sendMessage.BuyerId = order.buyer.id;
                     sendMessage.Message = "Message not defined";
