@@ -1,5 +1,6 @@
 ﻿using ASM.Core.Repositories;
 using ASM.Data.Entities;
+using ASM.Data.Interfaces;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using RestSharp;
@@ -11,10 +12,10 @@ namespace ASM.Services
     {
         private string accessToken = string.Empty;
         private readonly RestClient restClient;
-        private readonly IRepository<Seller> sellerRepository;
+        private readonly ISellerRepository sellerRepository;
         private readonly AsmConfiguration asmConfiguration;
 
-        public MeliService(IRepository<Seller> sellerRepository, AsmConfiguration asmConfiguration)
+        public MeliService(ISellerRepository sellerRepository, AsmConfiguration asmConfiguration)
         {
             restClient = new RestClient("https://api.mercadolibre.com");
             this.sellerRepository = sellerRepository;
