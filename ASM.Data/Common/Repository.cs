@@ -21,7 +21,6 @@ namespace ASM.Data.Common
         public void Add(TEntity entity)
         {
             dbSet.Add(entity);
-            context.SaveChanges();
         }
 
         public void Delete(int id)
@@ -30,7 +29,6 @@ namespace ASM.Data.Common
             if(entity != null)
             {
                 dbSet.Remove(entity);
-                context.SaveChanges();
             }
         }
 
@@ -65,7 +63,6 @@ namespace ASM.Data.Common
             try
             {
                 dbSet.Update(entity);
-                context.SaveChanges();
             }
             catch (Exception ex)
             {

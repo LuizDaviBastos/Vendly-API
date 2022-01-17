@@ -7,16 +7,16 @@ namespace ASM.Api.Controllers
 {
     public class MessageController : Controller
     {
-                private readonly ISellerRepository sellerRepository;
-        public MessageController(ISellerRepository sellerRepository)
+        private readonly IUnitOfWork uow;
+        public MessageController(IUnitOfWork uow)
         {
-            this.sellerRepository = sellerRepository;
+            this.uow = uow;
         }
 
         [HttpPost]
         public async Task<IActionResult> Message([FromBody] UpdateMessage updateMessage)
         {
-           var seller = await sellerRepository.UpdateMessage(updateMessage.Message, updateMessage.SellerId);
+            var seller = await uow.SellerRepository.UpdateMessage(updateMessage.Message, updateMessage.SellerId);
             return Ok(seller);
         }
     }

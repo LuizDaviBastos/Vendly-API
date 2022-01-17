@@ -19,7 +19,6 @@ namespace ASM.Data.Common
             context.Update(paymentInformation);
 
             Update(paymentInformation);
-            await context.SaveChangesAsync();
         }
 
         public async Task EnableSellerAsync(PaymentInformation paymentInformation)
@@ -27,7 +26,6 @@ namespace ASM.Data.Common
             paymentInformation.Status = StatusEnum.Active;
             paymentInformation.ExpireIn = DateTime.UtcNow;
             Update(paymentInformation);
-            await context.SaveChangesAsync();
         }
     }
 }

@@ -10,11 +10,11 @@ namespace ASM.Core.Function.Functions
 {
     public class NotificationProcess
     {
-        private readonly ISellerRepository sellerRepository;
+        private readonly IUnitOfWork uow;
         private readonly IMeliService meliService;
-        public NotificationProcess(ISellerRepository sellerRepository, IMeliService meliService)
+        public NotificationProcess(IUnitOfWork uow, IMeliService meliService)
         {
-            this.sellerRepository = sellerRepository;
+            this.uow = uow;
             this.meliService = meliService;
         }
 
@@ -53,7 +53,7 @@ namespace ASM.Core.Function.Functions
                     sendMessage.Message = "Message not defined";
 
                     //Get message by seller
-                    var sellerMessage = sellerRepository.GetQueryableAsNoTracking(x => x.SellerId == notification.user_id)
+                    var sellerMessage = uow.SellerRepository.GetQueryableAsNoTracking(x => x.SellerId == notification.user_id)
                         .Select(x => x.Message)
                         .FirstOrDefault();
 

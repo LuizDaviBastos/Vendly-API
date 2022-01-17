@@ -10,25 +10,26 @@ namespace ASM.Function.Functions
 {
     public class UpdatePaymentStatus
     {
-        private readonly IPaymentInformationRepository paymentInformationRepository;
-        public UpdatePaymentStatus(IPaymentInformationRepository paymentInformationRepository)
+        private readonly IUnitOfWork uow;
+        public UpdatePaymentStatus(IUnitOfWork uow)
         {
-            this.paymentInformationRepository = paymentInformationRepository;
+            this.uow = uow;
         }
 
         [FunctionName("UpdatePaymentStatus")]
-        public async Task Run([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
+        public async Task Run([TimerTrigger("%CronUpdateStatusSeller%")]TimerInfo myTimer, ILogger log)
         {
-
-            var activeBillingSellers = paymentInformationRepository.GetQueryableAsNoTracking(x => x.Status == StatusEnum.Active);
+            var activeBillingSellers = uow.PaymentInformationRepository.GetQueryableAsNoTracking(x => x.Status == StatusEnum.Active);
 
             foreach (var billing in activeBillingSellers)
             {
                 if(billing.ExpireIn >= DateTime.UtcNow)
                 {
-                    await paymentInformationRepository.DisableSellerAsync(billing);
+                    await uow.PaymentInformationRepository.DisableSellerAsync(billing);
                 }
             }
+
+            await uow.CommitAsync();
 
             log.LogInformation($"Payment status updated on: {DateTime.Now}");
         }

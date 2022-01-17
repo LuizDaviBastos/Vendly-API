@@ -1,4 +1,5 @@
-﻿using ASM.Data.Common;
+﻿using ASM.Data;
+using ASM.Data.Common;
 using ASM.Data.Contexts;
 using ASM.Data.Interfaces;
 using ASM.Services.Interfaces;
@@ -15,8 +16,7 @@ namespace ASM.Services.Helpers
         {
             services.AddScoped<IStorageService, StorageService>();
             services.AddScoped<IMeliService, MeliService>();
-            services.AddScoped<ISellerRepository, SellerRepository>();
-            services.AddScoped<IPaymentInformationRepository, PaymentInformationRepository>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             services.AddDbContext<AsmContext>(x => x.UseSqlServer(configuration["ConnectionString"]));
             services.AddSingleton(x => configuration.Get<AsmConfiguration>());

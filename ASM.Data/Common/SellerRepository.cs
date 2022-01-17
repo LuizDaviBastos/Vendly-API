@@ -34,7 +34,6 @@ namespace ASM.Data.Common
             context.Entry(seller).Property(x => x.SellerId).IsModified = false;
             context.Update(seller);
 
-            await context.SaveChangesAsync();
             return seller;
         }
     }
