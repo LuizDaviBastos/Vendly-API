@@ -26,5 +26,6 @@
         }
 
         public bool IsOrderV2 { get => topic == "orders_v2"; }
+        public bool OrderIdIsValid { get => this.OrderId != 0; }
     }
 }

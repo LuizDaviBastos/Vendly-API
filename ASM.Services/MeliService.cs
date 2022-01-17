@@ -215,7 +215,7 @@ namespace ASM.Services
 
         private bool SetAccessToken(long sellerId, out Seller seller)
         {   
-            seller = sellerRepository.GetQueryable(x => x.SellerId == sellerId).Select(x => new Seller 
+            seller = sellerRepository.GetQueryableAsNoTracking(x => x.SellerId == sellerId).Select(x => new Seller 
             { 
                 AccessToken = x.AccessToken, 
                 RefreshToken = x.RefreshToken
@@ -232,7 +232,7 @@ namespace ASM.Services
 
         private bool SetAccessToken(string accessToken, out Seller seller)
         {
-            seller = sellerRepository.GetQueryable(x => x.AccessToken == accessToken).Select(x => new Seller
+            seller = sellerRepository.GetQueryableAsNoTracking(x => x.AccessToken == accessToken).Select(x => new Seller
             {
                 RefreshToken = x.RefreshToken,
                 SellerId = x.SellerId,

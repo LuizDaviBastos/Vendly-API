@@ -1,5 +1,4 @@
-using ASM.Core.Repositories;
-using ASM.Data.Entities;
+using ASM.Data.Interfaces;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Microsoft.Azure.WebJobs;
@@ -7,13 +6,13 @@ using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ASM.Core.Function
+namespace ASM.Core.Function.Functions
 {
     public class NotificationProcess
     {
-        private readonly IRepository<Seller> sellerRepository;
+        private readonly ISellerRepository sellerRepository;
         private readonly IMeliService meliService;
-        public NotificationProcess(IRepository<Seller> sellerRepository, IMeliService meliService)
+        public NotificationProcess(ISellerRepository sellerRepository, IMeliService meliService)
         {
             this.sellerRepository = sellerRepository;
             this.meliService = meliService;
@@ -24,19 +23,24 @@ namespace ASM.Core.Function
         {
             /*
              TODO - AzFunction
-                1 - verify if this is the first message - x
-                2 - Get message by sellerId - x
-                3 - Build string message 
-                4 - Send message - x
-                5 - check as first message - x
+                1 - Build string message 
+                2 - dont send if not have payment 
+                3- make routine to enable/disable flag of payment
              */
 
             //TODO - https://developers.mercadolivre.com.br/pt_br/aplicativos#Usu%C3%A1rios-que-outorgaram-licen%C3%A7as-a-seu-aplicativo
 
+            if (!notification.OrderIdIsValid)
+            {
+                var message = $"Error to get OrderId (OrderId is:{notification.OrderId})";
+                log.LogError(message);
+                throw new System.Exception(message);
+            }
+
             var sendMessage = new SendMessage
             {
                 SellerId = notification.user_id,
-                PackId = notification.OrderId
+                PackId = notification.OrderId //important to send message to buyer
             };
 
             var isFirstSellerMessage = await meliService.IsFirstSellerMessage(sendMessage);
@@ -48,13 +52,14 @@ namespace ASM.Core.Function
                     sendMessage.BuyerId = order.buyer.id;
                     sendMessage.Message = "Message not defined";
 
-                    var sellerMessage = sellerRepository.GetQueryable(x => x.SellerId == notification.user_id)
+                    //Get message by seller
+                    var sellerMessage = sellerRepository.GetQueryableAsNoTracking(x => x.SellerId == notification.user_id)
                         .Select(x => x.Message)
                         .FirstOrDefault();
 
                     if (!string.IsNullOrEmpty(sellerMessage))
                     {
-                        //TODO build sellerMessage
+                        //TODO - build sellerMessage
                         sendMessage.Message = sellerMessage;
                     }
 
@@ -64,5 +69,7 @@ namespace ASM.Core.Function
                 }
             }
         }
+
+        
     }
 }

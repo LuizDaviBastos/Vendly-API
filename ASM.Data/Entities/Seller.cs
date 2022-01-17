@@ -6,5 +6,7 @@
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
         public string? Message { get; set; }
+
+        public virtual PaymentInformation BillingInformation { get; set; }
     }
 }

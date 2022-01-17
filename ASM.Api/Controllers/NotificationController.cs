@@ -9,12 +9,10 @@ namespace ASM.Api.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly IStorageService storageService;
-        private readonly IMeliService meliService;
 
-        public NotificationController(IStorageService storageService, IMeliService meliService)
+        public NotificationController(IStorageService storageService)
         {
             this.storageService = storageService;
-            this.meliService = meliService;
         }
 
         [HttpPost("NotificationTrigger")]

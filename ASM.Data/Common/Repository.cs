@@ -1,4 +1,4 @@
-﻿using ASM.Core.Repositories;
+﻿using ASM.Core.Interfaces;
 using ASM.Data.Contexts;
 using ASM.Data.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -39,10 +39,26 @@ namespace ASM.Data.Common
             return dbSet.Where(x => x.Id == id).FirstOrDefault();
         }
 
+        public IQueryable<TEntity> GetQueryableAsNoTracking(Expression<Func<TEntity, bool>> expression)
+        {
+            return dbSet.Where(expression).AsNoTracking();
+        }
+
+        public IQueryable<TEntity> GetQueryableAsNoTracking()
+        {
+            return dbSet.AsQueryable().AsNoTracking();
+        }
+
         public IQueryable<TEntity> GetQueryable(Expression<Func<TEntity, bool>> expression)
         {
             return dbSet.Where(expression).AsNoTracking();
         }
+
+        public IQueryable<TEntity> GetQueryable()
+        {
+            return dbSet.AsQueryable();
+        }
+
 
         public void Update(TEntity entity)
         {

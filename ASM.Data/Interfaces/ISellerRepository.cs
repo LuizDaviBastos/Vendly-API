@@ -1,4 +1,4 @@
-﻿using ASM.Core.Repositories;
+﻿using ASM.Core.Interfaces;
 using ASM.Data.Entities;
 using System.Threading.Tasks;
 
