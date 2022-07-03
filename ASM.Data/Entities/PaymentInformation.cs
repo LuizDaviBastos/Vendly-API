@@ -9,7 +9,7 @@ namespace ASM.Data.Entities
     {
         public StatusEnum? Status { get; set; }
         public DateTime? ExpireIn { get; set; }
-
+        public virtual long SellerId { get; set; }
         public virtual Seller Seller { get; set; }
     }
 }

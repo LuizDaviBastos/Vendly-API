@@ -1,5 +1,4 @@
-﻿using ASM.Core.Repositories;
-using ASM.Data.Entities;
+﻿using ASM.Data.Entities;
 using ASM.Data.Interfaces;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
@@ -12,13 +11,13 @@ namespace ASM.Services
     {
         private string accessToken = string.Empty;
         private readonly RestClient restClient;
-        private readonly ISellerRepository sellerRepository;
+        private readonly IUnitOfWork unitOfWork;
         private readonly AsmConfiguration asmConfiguration;
 
-        public MeliService(ISellerRepository sellerRepository, AsmConfiguration asmConfiguration)
+        public MeliService(IUnitOfWork unitOfWork, AsmConfiguration asmConfiguration)
         {
             restClient = new RestClient("https://api.mercadolibre.com");
-            this.sellerRepository = sellerRepository;
+            this.unitOfWork = unitOfWork;
             this.asmConfiguration = asmConfiguration;
         }
        
@@ -49,7 +48,7 @@ namespace ASM.Services
                 accessToken = result.Data;
                 accessToken.Success = true;
 
-                sellerRepository.AddOrUpdate(new Seller
+                unitOfWork.SellerRepository.AddOrUpdate(new Seller
                 {
                     AccessToken = accessToken.access_token,
                     SellerId = accessToken.user_id,
@@ -203,7 +202,7 @@ namespace ASM.Services
             var accessToken = await this.RefreshAccessTokenAsync(refreshToken, sellerId);
             this.accessToken = accessToken.access_token;
 
-            sellerRepository.AddOrUpdate(new Seller
+            unitOfWork.SellerRepository.AddOrUpdate(new Seller
             {
                 AccessToken = accessToken.access_token,
                 SellerId = accessToken.user_id,
@@ -215,7 +214,7 @@ namespace ASM.Services
 
         private bool SetAccessToken(long sellerId, out Seller seller)
         {   
-            seller = sellerRepository.GetQueryableAsNoTracking(x => x.SellerId == sellerId).Select(x => new Seller 
+            seller = unitOfWork.SellerRepository.GetQueryableAsNoTracking(x => x.SellerId == sellerId).Select(x => new Seller 
             { 
                 AccessToken = x.AccessToken, 
                 RefreshToken = x.RefreshToken
@@ -232,7 +231,7 @@ namespace ASM.Services
 
         private bool SetAccessToken(string accessToken, out Seller seller)
         {
-            seller = sellerRepository.GetQueryableAsNoTracking(x => x.AccessToken == accessToken).Select(x => new Seller
+            seller = unitOfWork.SellerRepository.GetQueryableAsNoTracking(x => x.AccessToken == accessToken).Select(x => new Seller
             {
                 RefreshToken = x.RefreshToken,
                 SellerId = x.SellerId,

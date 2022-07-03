@@ -3,7 +3,8 @@
   "Values": {
     "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=schedulerml;AccountKey=zOZ2lz9epWCX0dg//Z5ENvn0HOpbGF+isw3819I9n6JTN6U9iGIpPdgGk44gye4yimDyZceENYFYjXFusJZkfw==;BlobEndpoint=https://schedulerml.blob.core.windows.net/;QueueEndpoint=https://schedulerml.queue.core.windows.net/;TableEndpoint=https://schedulerml.table.core.windows.net/;FileEndpoint=https://schedulerml.file.core.windows.net/;",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-    //"ConnectionString": "Data source =C:\\Users\\davi-\\source\\repos\\ASM\\ASM.Api\\AsmDb.db",
+    "Invironment": "TEST",
+    "ConnectionStringLocal": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ASM;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False",
     "ConnectionString": "Data Source=asm-server.database.windows.net;Initial Catalog=prod-asmdb;User ID=luizdavi;Password=80849903Dd;Connect Timeout=30;Encrypt=True;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False",
     "SecretKey": "aDRd0VLWNbzH5qy4ZVNDyrWi0eqh3PCb",
     "AppId": 8710476337491405,

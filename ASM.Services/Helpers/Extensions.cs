@@ -17,9 +17,9 @@ namespace ASM.Services.Helpers
             services.AddScoped<IStorageService, StorageService>();
             services.AddScoped<IMeliService, MeliService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-            services.AddDbContext<AsmContext>(x => x.UseSqlServer(configuration["ConnectionString"]));
             services.AddSingleton(x => configuration.Get<AsmConfiguration>());
+
+            services.AddDbContext<AsmContext>(x => x.UseSqlServer(configuration[((configuration?["Invironment"] ?? "") == "TEST" ? "ConnectionStringLocal" : "ConnectionString")]));
 
             return services;
         }
