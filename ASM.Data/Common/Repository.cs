@@ -49,7 +49,7 @@ namespace ASM.Data.Common
 
         public IQueryable<TEntity> GetQueryable(Expression<Func<TEntity, bool>> expression)
         {
-            return dbSet.Where(expression).AsNoTracking();
+            return dbSet.Where(expression);
         }
 
         public IQueryable<TEntity> GetQueryable()

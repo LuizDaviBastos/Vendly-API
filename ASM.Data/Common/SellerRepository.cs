@@ -19,20 +19,23 @@ namespace ASM.Data.Common
             }
             else
             {
-                entity.Id = seller.Id;
-                Update(entity);
+                seller.AccessToken = entity.AccessToken;
+                seller.RefreshToken= entity.RefreshToken;
+                Update(seller);
             }
         }
 
         public async Task<Seller> UpdateMessage(string message, long sellerId)
         {
             var seller = GetQueryableAsNoTracking(x => x.SellerId == sellerId).FirstOrDefault();
+            if (seller == null) return null;
             seller.Message = message;
 
             context.Entry(seller).Property(x => x.AccessToken).IsModified = false;
             context.Entry(seller).Property(x => x.RefreshToken).IsModified = false;
             context.Entry(seller).Property(x => x.SellerId).IsModified = false;
             context.Update(seller);
+            context.SaveChanges();
 
             return seller;
         }

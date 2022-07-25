@@ -54,6 +54,7 @@ namespace ASM.Services
                     SellerId = accessToken.user_id,
                     RefreshToken = accessToken.refresh_token
                 });
+                await unitOfWork.CommitAsync();
             }
             else
             {

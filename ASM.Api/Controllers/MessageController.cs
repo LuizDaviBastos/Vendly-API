@@ -1,10 +1,12 @@
 ﻿using ASM.Api.Models;
 using ASM.Data.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ASM.Api.Controllers
 {
+    [Route("api/[controller]")]
     public class MessageController : Controller
     {
         private readonly IUnitOfWork uow;
@@ -13,11 +15,24 @@ namespace ASM.Api.Controllers
             this.uow = uow;
         }
 
-        [HttpPost]
+        [HttpPost("SaveMessage")]
         public async Task<IActionResult> Message([FromBody] UpdateMessage updateMessage)
         {
             var seller = await uow.SellerRepository.UpdateMessage(updateMessage.Message, updateMessage.SellerId);
+            await uow.CommitAsync();
+
+            if (seller == null)
+            {
+                return BadRequest($"Seller not found with id: {updateMessage.SellerId}");
+            }
             return Ok(seller);
+        }
+
+        [HttpGet("GetMessage")]
+        public IActionResult Message(GetMessage getMessage)
+        {
+            var message = uow.SellerRepository.GetQueryable(x => x.SellerId == getMessage.SellerId).Select(x => x.Message).FirstOrDefault();
+            return Ok(new { Message = message });
         }
     }
 }
