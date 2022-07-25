@@ -179,7 +179,7 @@ namespace ASM.Services
 
         public async Task<SellerInfo> GetSellerInfo(string accessToken, bool tryAgain = true)
         {
-            if (!SetAccessToken(accessToken, out Seller seller)) throw new Exception($"SetAccessToken Error{(seller.Id == 0 ? ". Seller not found" : "")}");
+            if (!SetAccessToken(accessToken, out Seller seller)) throw new Exception($"SetAccessToken Error{(string.IsNullOrEmpty(seller.id) ? ". Seller not found" : "")}");
 
             RestRequest restRequest = new RestRequest($"/users/me", Method.GET);
             restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}");
@@ -214,12 +214,8 @@ namespace ASM.Services
         }
 
         private bool SetAccessToken(long sellerId, out Seller seller)
-        {   
-            seller = unitOfWork.SellerRepository.GetQueryableAsNoTracking(x => x.SellerId == sellerId).Select(x => new Seller 
-            { 
-                AccessToken = x.AccessToken, 
-                RefreshToken = x.RefreshToken
-            }).FirstOrDefault() ?? new Seller();
+        {
+            seller = unitOfWork.SellerRepository.GetBySellerId(sellerId);
             
             if (seller == null) return false;
 
@@ -232,12 +228,7 @@ namespace ASM.Services
 
         private bool SetAccessToken(string accessToken, out Seller seller)
         {
-            seller = unitOfWork.SellerRepository.GetQueryableAsNoTracking(x => x.AccessToken == accessToken).Select(x => new Seller
-            {
-                RefreshToken = x.RefreshToken,
-                SellerId = x.SellerId,
-                AccessToken = x.AccessToken
-            }).FirstOrDefault();
+            seller = unitOfWork.SellerRepository.GetByAccessToken(accessToken);
 
             if (seller == null) return false;
 

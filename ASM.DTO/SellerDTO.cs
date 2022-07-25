@@ -1,13 +1,11 @@
-﻿using ASM.Data.Documents;
-
-namespace ASM.Data.Entities
+﻿namespace ASM.DTO
 {
-    public class Seller : DocumentBase
+    public class SellerDTO
     {
         public long SellerId { get; set; }
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
         public string? Message { get; set; }
-        public PaymentInformation BillingInformation { get; set; }
+        public PaymentInformationDTO BillingInformation { get; set; }
     }
 }

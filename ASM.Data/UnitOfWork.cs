@@ -1,48 +1,38 @@
 ﻿using ASM.Data.Common;
-using ASM.Data.Contexts;
 using ASM.Data.Interfaces;
+using MongoDB.Driver;
 using System.Threading.Tasks;
 
 namespace ASM.Data
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private readonly AsmContext context;
+        private readonly IMongoDatabase mongoDatabase;
         private ISellerRepository sellerRepository;
-        private IPaymentInformationRepository paymentInformationRepository;
 
-        public UnitOfWork(AsmContext context)
+        public UnitOfWork(IMongoDatabase mongoDatabase)
         {
-            this.context = context;
+            this.mongoDatabase = mongoDatabase;
         }
 
         public ISellerRepository SellerRepository 
         { 
             get 
             {
-                if (sellerRepository == null) sellerRepository = new SellerRepository(context);
+                if (sellerRepository == null) sellerRepository = new MongoSellerRepository(mongoDatabase);
                 return sellerRepository;
             }
             
         }
 
-        public IPaymentInformationRepository PaymentInformationRepository 
-        {
-            get
-            {
-                if (paymentInformationRepository == null) paymentInformationRepository = new PaymentInformationRepository(context);
-                return paymentInformationRepository;
-            }
-        }
-
         public void Commit()
         {
-            context.SaveChanges();
+            
         }
 
         public async Task CommitAsync()
         {
-            await context.SaveChangesAsync();
+            
         }
     }
 }

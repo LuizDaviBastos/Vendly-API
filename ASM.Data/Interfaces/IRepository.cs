@@ -9,11 +9,7 @@ namespace ASM.Core.Interfaces
         public void Add(TEntity entity);
         public void AddOrUpdate(TEntity entity);
         public void Update(TEntity entity);
-        public void Delete(int id);
-        public TEntity Get(int id);
-        public IQueryable<TEntity> GetQueryableAsNoTracking(Expression<Func<TEntity, bool>> expression);
-        public IQueryable<TEntity> GetQueryableAsNoTracking();
-        public IQueryable<TEntity> GetQueryable(Expression<Func<TEntity, bool>> expression);
-        public IQueryable<TEntity> GetQueryable();
+        public void Delete(string id);
+        public TEntity Get(string id);
     }
 }

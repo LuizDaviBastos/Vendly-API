@@ -19,13 +19,13 @@ namespace ASM.Function.Functions
         [FunctionName("UpdatePaymentStatus")]
         public async Task Run([TimerTrigger("%CronUpdateStatusSeller%")]TimerInfo myTimer, ILogger log)
         {
-            var activeBillingSellers = uow.PaymentInformationRepository.GetQueryableAsNoTracking(x => x.Status == StatusEnum.Active);
+            var activeBillingSellers = uow.SellerRepository.GetActiveBillings();
 
             foreach (var billing in activeBillingSellers)
             {
-                if(billing.ExpireIn >= DateTime.UtcNow)
+                if(billing.BillingInformation.ExpireIn >= DateTime.UtcNow)
                 {
-                    await uow.PaymentInformationRepository.DisableSellerAsync(billing);
+                    uow.SellerRepository.DisableSeller(billing);
                 }
             }
 

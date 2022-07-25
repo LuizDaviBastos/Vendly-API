@@ -31,8 +31,8 @@ namespace ASM.Api.Controllers
         [HttpGet("GetMessage")]
         public IActionResult Message(GetMessage getMessage)
         {
-            var message = uow.SellerRepository.GetQueryable(x => x.SellerId == getMessage.SellerId).Select(x => x.Message).FirstOrDefault();
-            return Ok(new { Message = message });
+            var seller = uow.SellerRepository.GetBySellerId(getMessage.SellerId);
+            return Ok(new { Message = seller.Message });
         }
     }
 }

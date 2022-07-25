@@ -1,12 +1,13 @@
 ﻿using ASM.Data.Contexts;
 using ASM.Data.Entities;
 using ASM.Data.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ASM.Data.Common
+namespace ASM.MongoDb.Common
 {
-    public class SellerRepository : Repository<Seller>, ISellerRepository
+    public class SellerRepository : MongoRepository<Seller>, ISellerRepository
     {
         public SellerRepository(AsmContext context) : base(context) { }
 
@@ -23,6 +24,16 @@ namespace ASM.Data.Common
                 seller.RefreshToken= entity.RefreshToken;
                 Update(seller);
             }
+        }
+
+        public Seller GetByAccessToken(string accessToken)
+        {
+            return context.Sellers.Where(x => x.AccessToken.ToLower() == accessToken.ToLower()).FirstOrDefault();
+        }
+
+        public Seller GetBySellerId(long sellerId)
+        {
+            return context.Sellers.Where(x => x.SellerId == sellerId).FirstOrDefault();
         }
 
         public async Task<Seller> UpdateMessage(string message, long sellerId)

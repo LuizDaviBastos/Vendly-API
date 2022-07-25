@@ -3,7 +3,6 @@ using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace ASM.Core.Function.Functions
@@ -50,22 +49,21 @@ namespace ASM.Core.Function.Functions
                 if (order.Success ?? false)
                 {
                     sendMessage.BuyerId = order.buyer.id;
-                    sendMessage.Message = "Message not defined";
 
                     //Get message by seller
-                    var sellerMessage = uow.SellerRepository.GetQueryableAsNoTracking(x => x.SellerId == notification.user_id)
-                        .Select(x => x.Message)
-                        .FirstOrDefault();
+                    var seller = uow.SellerRepository.GetBySellerId(notification.user_id);
 
-                    if (!string.IsNullOrEmpty(sellerMessage))
+                    if (!string.IsNullOrEmpty(seller?.Message))
                     {
                         //TODO - build sellerMessage
-                        sendMessage.Message = sellerMessage;
+                        sendMessage.Message = seller.Message;
+                        await meliService.SendMessageToBuyerAsync(sendMessage);
+                        log.LogInformation($"message sent successfully to BuyerId:{order.buyer.id}");
                     }
-
-                    await meliService.SendMessageToBuyerAsync(sendMessage);
-
-                    log.LogInformation($"message sent successfully to BuyerId:{order.buyer.id}");
+                    else
+                    {
+                        log.LogInformation($"Message not defined sellerId: {seller?.id}");
+                    }
                 }
             }
         }
