@@ -6,9 +6,9 @@
     "Invironment": "TEST",
     "ConnectionStringLocal": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ASM;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False",
     "ConnectionString": "mongodb+srv://luiz:80849903D@asmserveless.m1ukj.mongodb.net/?retryWrites=true&w=majority",
-    "SecretKey": "aDRd0VLWNbzH5qy4ZVNDyrWi0eqh3PCb",
-    "AppId": 8710476337491405,
-    "RedirectUrl": "https://fe56-177-85-44-254.ngrok.io/api/Auth/GetAccessToken",
+    "SecretKey": "gAvqtAlOugvac8BS4JLyr66WnQ9ApMZK",
+    "AppId": 177243280329659,
+    "RedirectUrl": "https://asm-api.somee.com/api/Auth/LoginSuccess",
     "Countries:AR": "https://auth.mercadolibre.com.ar",
     "Countries:BR": "https://auth.mercadolivre.com.br",
     "CronUpdateStatusSeller": "0 0 * * * *"

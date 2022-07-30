@@ -20,8 +20,7 @@ namespace ASM.Data.Common
             }
             catch (Exception ex)
             {
-
-                throw;
+                throw new Exception(ex.Message);
             }
         }
 
@@ -41,10 +40,9 @@ namespace ASM.Data.Common
             {
                 return collection.Find(x => x.id == id).FirstOrDefault();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                throw new Exception(ex.Message);
             }
             
         }
@@ -57,8 +55,7 @@ namespace ASM.Data.Common
             }
             catch (Exception ex)
             {
-
-                throw;
+                throw new Exception(ex.Message);
             }
         }
 
