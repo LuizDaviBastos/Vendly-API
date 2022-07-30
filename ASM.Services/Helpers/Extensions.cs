@@ -16,14 +16,13 @@ namespace ASM.Services.Helpers
             services.AddScoped<IMeliService, MeliService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddSingleton(x => configuration.Get<AsmConfiguration>());
-
-            var settings = MongoClientSettings.FromConnectionString("mongodb+srv://luiz:80849903D@asmserveless.m1ukj.mongodb.net/?retryWrites=true&w=majority");
+            
+            var settings = MongoClientSettings.FromConnectionString(configuration["ConnectionString"]);
             settings.ServerApi = new ServerApi(ServerApiVersion.V1);
             var client = new MongoClient(settings);
             var database = client.GetDatabase("ASMDatabase");
 
             services.AddScoped<IMongoDatabase>(x => database);
-            //services.AddDbContext<AsmContext>(x => x.UseSqlServer(configuration[((configuration?["Invironment"] ?? "") == "TEST" ? "ConnectionStringLocal" : "ConnectionString")]));
 
             return services;
         }

@@ -13,10 +13,9 @@ namespace ASM.Data.Common
         public MongoRepository(IMongoDatabase mongoDatabase)
         {
             this.mongoDatabase = mongoDatabase;
-            collection = mongoDatabase.GetCollection<TDocument>(nameof(TDocument));
+            collection = mongoDatabase.GetCollection<TDocument>(typeof(TDocument).Name);
             try
             {
-
                 var document = collection.Find(x => true).FirstOrDefault();
             }
             catch (Exception ex)
