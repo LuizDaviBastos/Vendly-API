@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <Folder Include="Images\" />
+    <Folder Include="asm-app\" />
   </ItemGroup>
 
   <ItemGroup>
