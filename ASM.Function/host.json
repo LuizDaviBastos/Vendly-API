@@ -1,11 +1,29 @@
 {
-    "version": "2.0",
-    "logging": {
-        "applicationInsights": {
-            "samplingSettings": {
-                "isEnabled": true,
-                "excludedTypes": "Request"
-            }
-        }
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      }
     }
+  },
+  "extensions": {
+    "queues": {
+      "batchSize": 1,
+      "newBatchThreshold": 0,
+      "maxPollingInterval": "00:00:30",
+      "visibilityTimeout": "00:01:00",
+      "maxDequeueCount": 3
+    }
+  }
 }
+
+/*
+In AppService
+NOME	VALOR
+WEBSITE_MAX_DYNAMIC_APPLICATION_SCALE_OUT	1
+FUNCTIONS_WORKER_PROCESS_COUNT	1
+
+  ref: https://laurakokkarinen.com/forcing-an-azure-function-to-process-queue-storage-messages-one-at-a-time/
+*/
