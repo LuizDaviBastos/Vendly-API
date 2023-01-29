@@ -166,7 +166,7 @@ namespace ASM.Services
 
             RestRequest restRequest = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.SellerId}", Method.GET);
             restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}")
-                .AddParameter("mark_as_read", false);
+                .AddParameter("tag", "post_sale");
 
             var result = await restClient.ExecuteAsync<MessagesResponse>(restRequest);
             if (result.IsSuccessful)
