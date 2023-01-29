@@ -37,7 +37,7 @@ namespace ASM.Core.Function.Functions
             //TODO - https://developers.mercadolivre.com.br/pt_br/aplicativos#Usu%C3%A1rios-que-outorgaram-licen%C3%A7as-a-seu-aplicativo
             if (!notification.OrderIdIsValid)
             {
-                var message = $"Error to get OrderId (OrderId is:{notification.OrderId})";
+                var message = $"Error to get OrderId (OrderId is: {notification.OrderId})";
                 log.LogError(message);
                 throw new System.Exception(message);
             }
