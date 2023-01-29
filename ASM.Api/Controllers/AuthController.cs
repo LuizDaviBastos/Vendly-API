@@ -51,12 +51,12 @@ namespace ASM.Api.Controllers
             
         }
 
-        [HttpGet("GetSellerInfo")]
-        public async Task<IActionResult> GetSellerInfo(string accessToken)
+        [HttpGet("GetSellerInfoBySellerId")]
+        public async Task<IActionResult> GetSellerInfo(long sellerId)
         {
             try
             {
-                var sellerInfo = await meliService.GetSellerInfo(accessToken);
+                var sellerInfo = await meliService.GetSellerInfoBySellerId(sellerId);
 
                 if (sellerInfo.Success ?? false) return Ok(sellerInfo);
 

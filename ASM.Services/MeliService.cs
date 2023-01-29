@@ -99,7 +99,11 @@ namespace ASM.Services
             var order = new Order();
             order.Success = false;
 
-            if (!SetAccessToken(notification.user_id, out Seller seller)) return order;
+            if (!SetAccessToken(notification.user_id, out Seller seller)) 
+            { 
+                order.Message = "Seller not found";
+                return order;
+            }
 
             RestRequest request = new RestRequest($"/orders/{notification.OrderId}", Method.GET);
             request.AddHeader("Authorization", $"Bearer {accessToken}");
@@ -177,7 +181,28 @@ namespace ASM.Services
             throw new Exception(result.Content);
         }
 
-        public async Task<SellerInfo> GetSellerInfo(string accessToken, bool tryAgain = true)
+        public async Task<SellerInfo> GetSellerInfoBySellerId(long sellerId, bool tryAgain = true)
+        {
+            if (!SetAccessToken(sellerId, out Seller seller)) throw new Exception($"SetAccessToken Error{(string.IsNullOrEmpty(seller.id) ? ". Seller not found" : "")}");
+
+            RestRequest restRequest = new RestRequest($"/users/me", Method.GET);
+            restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}");
+
+            var result = await restClient.ExecuteAsync<SellerInfo>(restRequest);
+            if (result.IsSuccessful)
+            {
+                result.Data.Success = true;
+                return result.Data;
+            }
+            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetSellerInfoBySellerId(sellerId, false));
+            }
+            
+            throw new Exception(result.Content);
+        }
+
+        public async Task<SellerInfo> GetSellerInfoByAccessToken(string accessToken, bool tryAgain = true)
         {
             if (!SetAccessToken(accessToken, out Seller seller)) throw new Exception($"SetAccessToken Error{(string.IsNullOrEmpty(seller.id) ? ". Seller not found" : "")}");
 
@@ -192,9 +217,9 @@ namespace ASM.Services
             }
             else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
             {
-                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetSellerInfo(this.accessToken, false));
+                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetSellerInfoByAccessToken(this.accessToken, false));
             }
-            
+
             throw new Exception(result.Content);
         }
 

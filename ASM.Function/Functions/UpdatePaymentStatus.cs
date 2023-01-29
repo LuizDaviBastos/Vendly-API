@@ -16,8 +16,9 @@ namespace ASM.Function.Functions
             this.uow = uow;
         }
 
-        [FunctionName("UpdatePaymentStatus")]
-        public async Task Run([TimerTrigger("%CronUpdateStatusSeller%")]TimerInfo myTimer, ILogger log)
+        //Remove comment to work
+        //[FunctionName("UpdatePaymentStatus")]
+        public async Task Run([TimerTrigger("%CronUpdatePaymentStatus%")]TimerInfo myTimer, ILogger log)
         {
             var activeBillingSellers = uow.SellerRepository.GetActiveBillings();
 

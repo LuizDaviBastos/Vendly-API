@@ -9,12 +9,12 @@
         public string last_name { get; set; }
         public string country_id { get; set; }
         public string email { get; set; }
-        public Identification identification { get; set; }
-        public Address address { get; set; }
+        //public Identification identification { get; set; }
+        //public Address address { get; set; }
         public Phone phone { get; set; }
         public AlternativePhone alternative_phone { get; set; }
         public string user_type { get; set; }
-        public List<string> tags { get; set; }
+        //public List<string> tags { get; set; }
         public object logo { get; set; }
         public long points { get; set; }
         public string site_id { get; set; }

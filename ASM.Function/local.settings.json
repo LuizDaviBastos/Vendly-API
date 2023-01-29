@@ -1,7 +1,7 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "AzureWebJobsStorage": "AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=asmstorage0;AccountKey=gZEePKFu2Rh2xGWxZNx6+nJSgKDxkeb9LcWaqt3S3z+ASBxNM7MdnAHv2G3eER1CNzSXG6w7//2o+AStERTNqA==;BlobEndpoint=https://asmstorage0.blob.core.windows.net/;QueueEndpoint=https://asmstorage0.queue.core.windows.net/;TableEndpoint=https://asmstorage0.table.core.windows.net/;FileEndpoint=https://asmstorage0.file.core.windows.net/;",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "Invironment": "TEST",
     "ConnectionStringLocal": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ASM;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False",
@@ -11,6 +11,6 @@
     "RedirectUrl": "https://asm-api.somee.com/api/Auth/LoginSuccess",
     "Countries:AR": "https://auth.mercadolibre.com.ar",
     "Countries:BR": "https://auth.mercadolivre.com.br",
-    "CronUpdateStatusSeller": "0 0 * * * *"
+    "CronUpdatePaymentStatus": "0 0 * * * *"
   }
 }

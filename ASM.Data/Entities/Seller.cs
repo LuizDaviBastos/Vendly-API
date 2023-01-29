@@ -8,6 +8,7 @@ namespace ASM.Data.Entities
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
         public string? Message { get; set; }
+        public bool? AfterSellerMessageEnabled { get; set; }
         public PaymentInformation BillingInformation { get; set; }
     }
 }
