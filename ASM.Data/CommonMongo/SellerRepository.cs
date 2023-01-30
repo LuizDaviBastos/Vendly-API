@@ -56,13 +56,14 @@ namespace ASM.Data.Common
             return collection.Find(x => x.SellerId == sellerId).FirstOrDefault();
         }
 
-        public async Task<Seller> UpdateMessage(string message, long sellerId)
+        public Seller? UpdateMessage(Seller seller)
         {
-            var seller = GetBySellerId(sellerId);
-            if (seller == null) return null;
+            var entity = GetBySellerId(seller.SellerId);
+            if (entity == null) return null;
 
-            seller.Message = message;
-            Update(seller);
+            entity.Message = seller.Message;
+            entity.AfterSellerMessageEnabled = seller.AfterSellerMessageEnabled;
+            Update(entity);
 
             return seller;
         }

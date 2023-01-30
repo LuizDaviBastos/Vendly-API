@@ -1,7 +1,7 @@
-﻿using ASM.Api.Models;
+﻿using ASM.Api.Helpers;
+using ASM.Api.Models;
 using ASM.Data.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace ASM.Api.Controllers
@@ -15,10 +15,10 @@ namespace ASM.Api.Controllers
             this.uow = uow;
         }
 
-        [HttpPost("SaveMessage")]
+        [HttpPost("Update")]
         public async Task<IActionResult> Message([FromBody] UpdateMessage updateMessage)
         {
-            var seller = await uow.SellerRepository.UpdateMessage(updateMessage.Message, updateMessage.SellerId);
+            var seller = uow.SellerRepository.UpdateMessage(updateMessage.ToEntity());
             await uow.CommitAsync();
 
             if (seller == null)
@@ -28,11 +28,11 @@ namespace ASM.Api.Controllers
             return Ok(seller);
         }
 
-        [HttpGet("GetMessage")]
-        public IActionResult Message(GetMessage getMessage)
+        [HttpGet("Get")]
+        public IActionResult Message(long sellerId)
         {
-            var seller = uow.SellerRepository.GetBySellerId(getMessage.SellerId);
-            return Ok(new { Message = seller.Message });
+            var seller = uow.SellerRepository.GetBySellerId(sellerId);
+            return Ok(seller.ToUpdateMessage());
         }
     }
 }

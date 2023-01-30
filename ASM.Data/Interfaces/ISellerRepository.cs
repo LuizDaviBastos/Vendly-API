@@ -7,7 +7,7 @@ namespace ASM.Data.Interfaces
 {
     public interface ISellerRepository : IRepository<Seller>
     {
-        public Task<Seller> UpdateMessage(string message, long sellerId);
+        public Seller? UpdateMessage(Seller seller);
         public Seller GetBySellerId(long sellerId);
         public Seller GetByAccessToken(string accessToken);
         public void DisableSeller(Seller seller);
