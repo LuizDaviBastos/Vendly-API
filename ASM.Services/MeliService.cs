@@ -132,8 +132,8 @@ namespace ASM.Services
             if (!SetAccessToken(sendMessage.SellerId, out Seller seller)) return false;
 
             RestRequest request = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.SellerId}", Method.POST);
-            request.AddHeader("Authorization", $"Bearer {this.accessToken}")
-            .AddParameter("tag", "post_sale")
+            request.AddHeader("Authorization", $"Bearer {this.accessToken}");
+            request.AddQueryParameter("tag", "post_sale")
             .AddJsonBody(new
             {
                 from = new
