@@ -7,8 +7,8 @@
     "ConnectionStringLocal": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ASM;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False",
     "ConnectionString": "mongodb+srv://luiz:80849903D@asmserveless.m1ukj.mongodb.net/?retryWrites=true&w=majority",
     "SecretKey": "gAvqtAlOugvac8BS4JLyr66WnQ9ApMZK",
-    "AppId": 177243280329659,
-    "RedirectUrl": "https://asm-api.somee.com/api/Auth/LoginSuccess",
+    "AppId": 4602889885443805,
+    "RedirectUrl": "https://asmstorage0.blob.core.windows.net/public/LoginSuccess.html",
     "Countries:AR": "https://auth.mercadolibre.com.ar",
     "Countries:BR": "https://auth.mercadolivre.com.br",
     "CronUpdatePaymentStatus": "0 0 * * * *"

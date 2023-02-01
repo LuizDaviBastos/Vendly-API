@@ -133,7 +133,7 @@ namespace ASM.Services
 
             RestRequest request = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.SellerId}", Method.POST);
             request.AddHeader("Authorization", $"Bearer {this.accessToken}")
-            .AddParameter("application_id", asmConfiguration.AppId)
+            .AddParameter("tag", "post_sale")
             .AddJsonBody(new
             {
                 from = new
