@@ -1,6 +1,6 @@
 ﻿namespace ASM.Data.Enums
 {
-    public enum StatusEnum
+    public enum BillingStatus
     {
         Active = 1,
         Inactive = 2

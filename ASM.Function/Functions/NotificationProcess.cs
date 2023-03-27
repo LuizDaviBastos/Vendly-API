@@ -1,3 +1,4 @@
+using ASM.Data.Enums;
 using ASM.Data.Interfaces;
 using ASM.Services.Helpers;
 using ASM.Services.Interfaces;
@@ -5,6 +6,7 @@ using ASM.Services.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,10 +16,13 @@ namespace ASM.Core.Function.Functions
     {
         private readonly IUnitOfWork uow;
         private readonly IMeliService meliService;
-        public NotificationProcess(IUnitOfWork uow, IMeliService meliService)
+        private readonly ISellerService sellerService;
+
+        public NotificationProcess(IUnitOfWork uow, IMeliService meliService, ISellerService sellerService)
         {
             this.uow = uow;
             this.meliService = meliService;
+            this.sellerService = sellerService;
         }
 
         [FunctionName("NotificationProcess")]
@@ -31,8 +36,9 @@ namespace ASM.Core.Function.Functions
              */
 
             //Can send after seller messages
-            var enabled = uow.SellerRepository.GetBySellerId(notification.user_id)?.AfterSellerMessageEnabled ?? true;
-            if (!enabled) return;
+            var sellerMessage = await sellerService.GetMessageByMeliSellerId(notification.user_id, MessageType.AfterSeller);
+
+            if (!(sellerMessage?.Activated ?? false)) return;
 
             //TODO - https://developers.mercadolivre.com.br/pt_br/aplicativos#Usu%C3%A1rios-que-outorgaram-licen%C3%A7as-a-seu-aplicativo
             if (!notification.OrderIdIsValid)
@@ -44,8 +50,9 @@ namespace ASM.Core.Function.Functions
 
             var sendMessage = new SendMessage
             {
-                SellerId = notification.user_id,
-                PackId = notification.OrderId //important to send message to buyer
+                MeliSellerId = notification.user_id,
+                PackId = notification.OrderId, //important to send message to buyer
+                Message = sellerMessage.Message
             };
 
             var isFirstSellerMessage = await meliService.IsFirstSellerMessage(sendMessage);
@@ -55,20 +62,16 @@ namespace ASM.Core.Function.Functions
                 if (order.Success ?? false)
                 {
                     sendMessage.BuyerId = order.buyer.id;
-
-                    //Get message by seller
-                    var seller = uow.SellerRepository.GetBySellerId(notification.user_id);
-
-                    if (!string.IsNullOrEmpty(seller?.Message))
+                    if (!string.IsNullOrEmpty(sellerMessage?.Message))
                     {
                         //Prepare sellerMessage
-                        sendMessage.Message = Utils.PrepareSellerMessage(seller.Message, order);
+                        sendMessage.Message = Utils.PrepareSellerMessage(sellerMessage.Message, order);
                         await meliService.SendMessageToBuyerAsync(sendMessage);
                         log.LogInformation($"message sent successfully to BuyerId:{order.buyer.id}");
                     }
                     else
                     {
-                        log.LogInformation($"Message not defined sellerId: {seller?.id}");
+                        log.LogInformation($"Message not defined sellerId: {sellerMessage?.SellerId}");
                     }
                 }
             }

@@ -13,18 +13,20 @@ namespace ASM.Services
         private readonly RestClient restClient;
         private readonly IUnitOfWork unitOfWork;
         private readonly AsmConfiguration asmConfiguration;
+        private readonly ISellerService sellerService;
 
-        public MeliService(IUnitOfWork unitOfWork, AsmConfiguration asmConfiguration)
+        public MeliService(IUnitOfWork unitOfWork, AsmConfiguration asmConfiguration, ISellerService sellerService)
         {
             restClient = new RestClient("https://api.mercadolibre.com");
             this.unitOfWork = unitOfWork;
             this.asmConfiguration = asmConfiguration;
+            this.sellerService = sellerService;
         }
-       
+
         public string GetAuthUrl(string countryId)
         {
             var authUrl = $"{{0}}/authorization?response_type=code&client_id={asmConfiguration.AppId}&redirect_uri={asmConfiguration.RedirectUrl}";
-            return string.Format(authUrl, asmConfiguration.Countries?[countryId.ToUpper()]); 
+            return string.Format(authUrl, asmConfiguration.Countries?[countryId.ToUpper()]);
         }
 
         public async Task<AccessToken> GetAccessTokenAsync(string code)
@@ -47,14 +49,6 @@ namespace ASM.Services
             {
                 accessToken = result.Data;
                 accessToken.Success = true;
-
-                unitOfWork.SellerRepository.AddOrUpdate(new Seller
-                {
-                    AccessToken = accessToken.access_token,
-                    SellerId = accessToken.user_id,
-                    RefreshToken = accessToken.refresh_token
-                });
-                await unitOfWork.CommitAsync();
             }
             else
             {
@@ -65,7 +59,124 @@ namespace ASM.Services
             return accessToken;
         }
 
-        public async Task<AccessToken> RefreshAccessTokenAsync(string refreshToken, long sellerId)
+        public async Task<Order> GetOrderDetailsAsync(NotificationTrigger notification, bool tryAgain = true)
+        {
+            var order = new Order();
+            order.Success = false;
+
+            if (!SetAccessToken(notification.user_id, out MeliAccount? meliAccount))
+            {
+                order.Message = "Seller not found";
+                return order;
+            }
+
+            RestRequest request = new RestRequest($"/orders/{notification.OrderId}", Method.GET);
+            request.AddHeader("Authorization", $"Bearer {accessToken}");
+
+            var result = await restClient.ExecuteAsync<Order>(request);
+            if (result.IsSuccessful)
+            {
+                order = result.Data;
+                order.Success = true;
+            }
+            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest)
+            {
+                return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetOrderDetailsAsync(notification, false));
+            }
+            else
+            {
+                order.Success = false;
+                order.Message = result.Content;
+            }
+
+            return order;
+        }
+
+        public async Task<bool> SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgain = true)
+        {
+            if (!SetAccessToken(sendMessage.MeliSellerId, out MeliAccount? meliAccount)) return false;
+
+            RestRequest request = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.MeliSellerId}", Method.POST);
+            request.AddHeader("Authorization", $"Bearer {this.accessToken}");
+            request.AddQueryParameter("tag", "post_sale")
+            .AddJsonBody(new
+            {
+                from = new
+                {
+                    user_id = sendMessage.MeliSellerId
+                },
+                to = new
+                {
+                    user_id = sendMessage.BuyerId
+                },
+                text = sendMessage.Message
+            });
+
+            var result = await restClient.ExecuteAsync(request);
+            if (result.IsSuccessful)
+            {
+                return true;
+            }
+            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest)
+            {
+                return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await SendMessageToBuyerAsync(sendMessage, false));
+            }
+
+            return false;
+        }
+
+        public async Task<bool> IsFirstSellerMessage(SendMessage sendMessage, bool tryAgain = true)
+        {
+            if (!SetAccessToken(sendMessage.MeliSellerId, out MeliAccount meliAccount)) return false;
+
+            RestRequest restRequest = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.MeliSellerId}", Method.GET);
+            restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}")
+                .AddParameter("tag", "post_sale");
+
+            var result = await restClient.ExecuteAsync<MessagesResponse>(restRequest);
+            if (result.IsSuccessful)
+            {
+                return !result.Data.messages.Any(x => x.from.user_id == sendMessage.MeliSellerId);
+            }
+            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return await RefreshTokenAndTryAgain(meliAccount.RefreshToken, async () => await IsFirstSellerMessage(sendMessage, false));
+            }
+
+            throw new Exception(result.Content);
+        }
+
+        public async Task<SellerInfo> GetSellerInfoByMeliSellerId(long meliSellerId, bool tryAgain = true)
+        {
+            if (!SetAccessToken(meliSellerId, out MeliAccount? meliAccount)) throw new Exception($"SetAccessToken Error{(meliAccount == null || meliAccount?.Id == Guid.Empty ? ". Seller not found" : "")}");
+
+            RestRequest restRequest = new RestRequest($"/users/me", Method.GET);
+            restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}");
+
+            var result = await restClient.ExecuteAsync<SellerInfo>(restRequest);
+            if (result.IsSuccessful)
+            {
+                result.Data.Success = true;
+                return result.Data;
+            }
+            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetSellerInfoByMeliSellerId(meliSellerId, false));
+            }
+
+            throw new Exception(result.Content);
+        }
+
+        private async Task<TResult> RefreshTokenAndTryAgain<TResult>(string refreshToken, Func<Task<TResult>> func)
+        {
+            var accessToken = await this.RefreshAccessTokenAsync(refreshToken);
+            this.accessToken = accessToken.access_token;
+
+            await sellerService.UpdateTokenMeliAccount(accessToken);
+            return await func();
+        }
+
+        private async Task<AccessToken> RefreshAccessTokenAsync(string refreshToken)
         {
             AccessToken accessToken = new AccessToken();
             accessToken.Success = false;
@@ -94,172 +205,13 @@ namespace ASM.Services
             return accessToken;
         }
 
-        public async Task<Order> GetOrderDetailsAsync(NotificationTrigger notification, bool tryAgain = true)
+        private bool SetAccessToken(long meliSellerId, out MeliAccount? meliAccount)
         {
-            var order = new Order();
-            order.Success = false;
+            meliAccount = unitOfWork.MeliAccountRepository.GetByMeliSellerId(meliSellerId);
 
-            if (!SetAccessToken(notification.user_id, out Seller seller)) 
-            { 
-                order.Message = "Seller not found";
-                return order;
-            }
+            if (meliAccount == null) return false;
 
-            RestRequest request = new RestRequest($"/orders/{notification.OrderId}", Method.GET);
-            request.AddHeader("Authorization", $"Bearer {accessToken}");
-
-            var result = await restClient.ExecuteAsync<Order>(request);
-            if (result.IsSuccessful)
-            {
-                order = result.Data;
-                order.Success = true;
-            }
-            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest)
-            {
-                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetOrderDetailsAsync(notification, false));
-            }
-            else
-            {
-                order.Success = false;
-                order.Message = result.Content;
-            }
-
-            return order;
-        }
-
-        public async Task<bool> SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgain = true)
-        {
-            if (!SetAccessToken(sendMessage.SellerId, out Seller seller)) return false;
-
-            RestRequest request = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.SellerId}", Method.POST);
-            request.AddHeader("Authorization", $"Bearer {this.accessToken}");
-            request.AddQueryParameter("tag", "post_sale")
-            .AddJsonBody(new
-            {
-                from = new
-                {
-                    user_id = sendMessage.SellerId
-                },
-                to = new
-                {
-                    user_id = sendMessage.BuyerId
-                },
-                text = sendMessage.Message
-            });
-
-            var result = await restClient.ExecuteAsync(request);
-            if (result.IsSuccessful)
-            {
-                return true;
-            }
-            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest)
-            {
-                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await SendMessageToBuyerAsync(sendMessage, false));
-            }
-
-            return false;
-        }
-
-        public async Task<bool> IsFirstSellerMessage(SendMessage sendMessage, bool tryAgain = true)
-        {
-            if (!SetAccessToken(sendMessage.SellerId, out Seller seller)) return false;
-
-            RestRequest restRequest = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.SellerId}", Method.GET);
-            restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}")
-                .AddParameter("tag", "post_sale");
-
-            var result = await restClient.ExecuteAsync<MessagesResponse>(restRequest);
-            if (result.IsSuccessful)
-            {
-                return !result.Data.messages.Any(x => x.from.user_id == sendMessage.SellerId);
-            }
-            else if(tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await IsFirstSellerMessage(sendMessage, false));
-            }
-
-            throw new Exception(result.Content);
-        }
-
-        public async Task<SellerInfo> GetSellerInfoBySellerId(long sellerId, bool tryAgain = true)
-        {
-            if (!SetAccessToken(sellerId, out Seller seller)) throw new Exception($"SetAccessToken Error{(string.IsNullOrEmpty(seller.id) ? ". Seller not found" : "")}");
-
-            RestRequest restRequest = new RestRequest($"/users/me", Method.GET);
-            restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}");
-
-            var result = await restClient.ExecuteAsync<SellerInfo>(restRequest);
-            if (result.IsSuccessful)
-            {
-                result.Data.Success = true;
-                return result.Data;
-            }
-            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetSellerInfoBySellerId(sellerId, false));
-            }
-            
-            throw new Exception(result.Content);
-        }
-
-        public async Task<SellerInfo> GetSellerInfoByAccessToken(string accessToken, bool tryAgain = true)
-        {
-            if (!SetAccessToken(accessToken, out Seller seller)) throw new Exception($"SetAccessToken Error{(string.IsNullOrEmpty(seller.id) ? ". Seller not found" : "")}");
-
-            RestRequest restRequest = new RestRequest($"/users/me", Method.GET);
-            restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}");
-
-            var result = await restClient.ExecuteAsync<SellerInfo>(restRequest);
-            if (result.IsSuccessful)
-            {
-                result.Data.Success = true;
-                return result.Data;
-            }
-            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                return await RefreshTokenAndTryAgain(seller.RefreshToken, seller.SellerId, async () => await GetSellerInfoByAccessToken(this.accessToken, false));
-            }
-
-            throw new Exception(result.Content);
-        }
-
-        private async Task<TResult> RefreshTokenAndTryAgain<TResult>(string refreshToken, long sellerId, Func<Task<TResult>> func)
-        {
-            var accessToken = await this.RefreshAccessTokenAsync(refreshToken, sellerId);
-            this.accessToken = accessToken.access_token;
-
-            unitOfWork.SellerRepository.AddOrUpdate(new Seller
-            {
-                AccessToken = accessToken.access_token,
-                SellerId = accessToken.user_id,
-                RefreshToken = accessToken.refresh_token
-            });
-
-            return await func();
-        }
-
-        private bool SetAccessToken(long sellerId, out Seller seller)
-        {
-            seller = unitOfWork.SellerRepository.GetBySellerId(sellerId);
-            
-            if (seller == null) return false;
-
-            seller.SellerId = sellerId;
-            this.accessToken = seller.AccessToken;
-
-            return true;
-        }
-
-
-        private bool SetAccessToken(string accessToken, out Seller seller)
-        {
-            seller = unitOfWork.SellerRepository.GetByAccessToken(accessToken);
-
-            if (seller == null) return false;
-
-            seller.SellerId = seller.SellerId;
-            this.accessToken = seller.AccessToken;
-
+            this.accessToken = meliAccount.AccessToken;
             return true;
         }
 

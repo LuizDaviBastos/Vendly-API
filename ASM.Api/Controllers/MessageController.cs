@@ -1,5 +1,6 @@
 ﻿using ASM.Api.Helpers;
 using ASM.Api.Models;
+using ASM.Data.Entities;
 using ASM.Data.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -16,23 +17,18 @@ namespace ASM.Api.Controllers
         }
 
         [HttpPost("Update")]
-        public async Task<IActionResult> Message([FromBody] UpdateMessage updateMessage)
+        public async Task<IActionResult> Message([FromBody] SellerMessage updateMessage)
         {
-            var seller = uow.SellerRepository.UpdateMessage(updateMessage.ToEntity());
+            var seller = uow.SellerRepository.UpdateMessage(updateMessage);
             await uow.CommitAsync();
-
-            if (seller == null)
-            {
-                return BadRequest($"Seller not found with id: {updateMessage.SellerId}");
-            }
             return Ok(seller);
         }
 
         [HttpGet("Get")]
-        public IActionResult Message(long sellerId)
+        public IActionResult Message(long meliSellerId)
         {
-            var seller = uow.SellerRepository.GetBySellerId(sellerId);
-            return Ok(seller.ToUpdateMessage());
+            var seller = uow.SellerRepository.GetByMeliSellerId(meliSellerId);
+            return Ok(seller);
         }
     }
 }

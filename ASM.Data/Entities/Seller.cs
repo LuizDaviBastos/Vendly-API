@@ -1,14 +1,16 @@
-﻿using ASM.Data.Documents;
+﻿using System.Collections.Generic;
 
 namespace ASM.Data.Entities
 {
-    public class Seller : DocumentBase
+    public class Seller : EntityBase
     {
-        public long SellerId { get; set; }
-        public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
-        public string? Message { get; set; }
-        public bool? AfterSellerMessageEnabled { get; set; }
-        public PaymentInformation BillingInformation { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+        
+        public virtual PaymentInformation BillingInformation { get; set; }
+        public virtual IList<SellerMessage> Messages { get; set; }
+        public virtual IList<MeliAccount> MeliAccounts { get; set; }
     }
 }

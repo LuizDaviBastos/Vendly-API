@@ -11,6 +11,6 @@ namespace ASM.Services.Interfaces
         public Task<bool> SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgain = true);
         public Task<bool> IsFirstSellerMessage(SendMessage sendMessage, bool tryAgain = true);
         public Task<SellerInfo> GetSellerInfoByAccessToken(string accessToken, bool tryAgain = true);
-        public Task<SellerInfo> GetSellerInfoBySellerId(long sellerId, bool tryAgain = true);
+        public Task<SellerInfo> GetSellerInfoByMeliSellerId(long sellerId, bool tryAgain = true);
     }
 }

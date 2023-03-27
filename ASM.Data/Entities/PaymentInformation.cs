@@ -1,15 +1,14 @@
-﻿using ASM.Data.Documents;
-using ASM.Data.Enums;
+﻿using ASM.Data.Enums;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ASM.Data.Entities
 {
-    public class PaymentInformation : DocumentBase
+    public class PaymentInformation : EntityBase
     {
-        public StatusEnum? Status { get; set; }
+        public BillingStatus? Status { get; set; }
         public DateTime? ExpireIn { get; set; }
-        public Seller Seller { get; set; }
+
+        public Guid SellerId { get; set; }
+        public virtual Seller Seller { get; set; }
     }
 }
