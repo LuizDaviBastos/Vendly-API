@@ -28,12 +28,12 @@ namespace ASM.Data.Common
 
         public Seller? GetByAccessToken(string accessToken)
         {
-            return dbSet.FirstOrDefault(x => x.AccessToken == accessToken);
+            return dbSet.FirstOrDefault(x => x.MeliAccounts.Any(x => x.AccessToken == accessToken));
         }
 
-        public Seller? GetByMeliSellerId(long sellerId)
+        public Seller? GetByMeliSellerId(long meliSellerId)
         {
-            return dbSet.FirstOrDefault(x => x.SellerId == sellerId);
+            return dbSet.FirstOrDefault(x => x.MeliAccounts.Any(x => x.MeliSellerId == meliSellerId));
         }
 
         public IQueryable<Seller> GetQueryable()
@@ -43,7 +43,14 @@ namespace ASM.Data.Common
 
         public SellerMessage? UpdateMessage(SellerMessage sellerMessage)
         {
-            dbSet.Update(sellerMessage);
+            var entity = dbContext.Set<SellerMessage>().FirstOrDefault(x => x.Id == sellerMessage.Id);
+            if(entity != null)
+            {
+                entity.Message = sellerMessage.Message;
+                entity.Activated = sellerMessage.Activated;
+                dbContext.Set<SellerMessage>().Update(entity);
+            }
+            
             return sellerMessage;
         }
 
