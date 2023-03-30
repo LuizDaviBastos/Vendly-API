@@ -12,9 +12,11 @@ namespace ASM.Data.Interfaces
         public SellerMessage? UpdateMessage(SellerMessage sellerMessage);
         public Seller? GetByMeliSellerId(long sellerId);
         public Seller? GetByAccessToken(string accessToken);
+        public Task<Seller?> GetByEmailAsync(string email);
         public IQueryable<Seller> GetQueryable();
         public void DisableSeller(Seller seller);
         public void EnableSeller(Seller seller);
         public IEnumerable<Seller> GetActiveBillings();
+        public Task<Seller?> MeliSellerExist(long meliSellerId);
     }
 }

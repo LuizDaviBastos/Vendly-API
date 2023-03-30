@@ -9,7 +9,7 @@ namespace ASM.Data.Entities
         public bool Activated { get; set; }
         public MessageType Type { get; set; }
 
-        public Guid SellerId { get; set; }
+        public Guid? SellerId { get; set; }
         public virtual Seller Seller { get; set; }
         
     }

@@ -5,15 +5,27 @@
     <Nullable>enable</Nullable>
     <UserSecretsId>06238903-9a72-490a-8c9f-1a64d8976f6c</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <Configurations>Debug;Release;Local</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <LangVersion>default</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Local|AnyCPU'">
+    <LangVersion>default</LangVersion>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <LangVersion>default</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Images\**" />
+    <Content Remove="Images\**" />
+    <EmbeddedResource Remove="Images\**" />
+    <None Remove="Images\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.0">
@@ -36,10 +48,6 @@
     <Content Update="wwwroot\.well-known\assetlinks.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Images\" />
   </ItemGroup>
 
   <ItemGroup>

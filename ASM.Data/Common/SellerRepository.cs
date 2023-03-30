@@ -1,9 +1,11 @@
 ﻿using ASM.Data.Entities;
 using ASM.Data.Enums;
 using ASM.Data.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ASM.Data.Common
 {
@@ -38,7 +40,7 @@ namespace ASM.Data.Common
 
         public IQueryable<Seller> GetQueryable()
         {
-            return dbSet.AsQueryable();
+            return dbSet;
         }
 
         public SellerMessage? UpdateMessage(SellerMessage sellerMessage)
@@ -58,5 +60,16 @@ namespace ASM.Data.Common
         {
             
         }
+
+        public async Task<Seller?> GetByEmailAsync(string email)
+        {
+            return await dbSet.FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower());
+        }
+
+        public async Task<Seller?> MeliSellerExist(long meliSellerId)
+        {
+            return await dbSet.Where(x => x.MeliAccounts.Any(x => x.MeliSellerId == meliSellerId)).Select(x => new Seller { Email = x.Email }).FirstOrDefaultAsync();
+        }
+
     }
 }

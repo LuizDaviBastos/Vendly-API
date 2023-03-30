@@ -1,10 +1,8 @@
-﻿using ASM.Api.Helpers;
-using ASM.Api.Models;
+﻿using ASM.Api.Models;
 using ASM.Data.Entities;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using System;
 using System.Threading.Tasks;
 
@@ -16,13 +14,11 @@ namespace ASM.Api.Controllers
         private readonly IMeliService meliService;
         private readonly ISellerService sellerService;
         private readonly AsmConfiguration asmConfiguration;
-        private readonly IConfiguration configuration;
 
-        public AuthController(IMeliService meliService, AsmConfiguration asmConfiguration, IConfiguration configuration, ISellerService sellerService)
+        public AuthController(IMeliService meliService, AsmConfiguration asmConfiguration, ISellerService sellerService)
         {
             this.meliService = meliService;
             this.asmConfiguration = asmConfiguration;
-            this.configuration = configuration;
             this.sellerService = sellerService;
         }
 
@@ -38,7 +34,7 @@ namespace ASM.Api.Controllers
         }
 
         [HttpPost("SaveAccount")]
-        public async Task<IActionResult> SaveAccount(SaveAccount account)
+        public async Task<IActionResult> SaveAccount([FromBody] SaveAccount account)
         {
             try
             {
@@ -51,12 +47,12 @@ namespace ASM.Api.Controllers
                 };
                 var saveResult = await sellerService.SaveAccount(entity);
 
-                if(saveResult.Item2)
+                if (saveResult.Item2)
                 {
-                    return Ok(entity);
+                    return Ok(new { success = true, data = entity });
                 }
 
-                return BadRequest(saveResult.Item2);
+                return BadRequest(saveResult.Item1);
             }
             catch (System.Exception ex)
             {
@@ -65,18 +61,18 @@ namespace ASM.Api.Controllers
 
         }
 
-        [HttpGet("SyncMeliAccount")]
-        public async Task<IActionResult> SyncMeliAccount(string code, Guid sellerId)
+        [HttpPost("SyncMeliAccount")]
+        public async Task<IActionResult> SyncMeliAccount([FromBody] SynMeliAccount syncAccount)
         {
             try
             {
-                var accessToken = await meliService.GetAccessTokenAsync(code);
+                var accessToken = await meliService.GetAccessTokenAsync(syncAccount.Code);
                 if (accessToken.Success ?? false)
                 {
-                    var addResult = await sellerService.AddMeliAccount(sellerId, accessToken);
+                    var addResult = await sellerService.AddMeliAccount(syncAccount.SellerId, accessToken);
                     if (addResult.Item2)
                     {
-                        return Ok(addResult.Item1);
+                        return Ok(new { success = true });
                     }
 
                     return BadRequest(addResult.Item1);
@@ -91,45 +87,24 @@ namespace ASM.Api.Controllers
 
         }
 
-        [HttpGet("GetSellerInfoBySellerId")]
-        public async Task<IActionResult> GetSellerInfo(long meliSellerId)
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login(string email, string password)
         {
             try
             {
-                var sellerInfo = await meliService.GetSellerInfoByMeliSellerId(meliSellerId);
+                var login = await sellerService.Login(email, password);
+                if (login.Success)
+                {
+                    return Ok(login);
+                }
 
-                if (sellerInfo.Success ?? false) return Ok(sellerInfo);
-
-                return BadRequest(sellerInfo);
+                return BadRequest(login.Message);
             }
             catch (System.Exception ex)
             {
-
                 return BadRequest(ex.Message);
             }
 
-        }
-
-        [HttpGet("SetSettings")]
-        public IActionResult SetSettings(string key, string value)
-        {
-            configuration.Set(key, value);
-            return Ok();
-        }
-
-        [HttpGet("GetSettings")]
-        public IActionResult GetSettings(string key)
-        {
-            return Ok(configuration[key]);
-        }
-
-        [HttpGet("LoginSuccess")]
-        public IActionResult LoginSuccess(string code)
-        {
-            return View();
-            /*
-            var html = System.IO.File.ReadAllText("./Views/Auth/LoginSuccess.html");
-            return Content(html, "text/html");*/
         }
     }
 }

@@ -12,7 +12,7 @@ namespace ASM.Data.Entities
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
 
-        public Guid SellerId { get; set; }
+        public Guid? SellerId { get; set; }
         public virtual Seller Seller { get; set; }
     }
 }

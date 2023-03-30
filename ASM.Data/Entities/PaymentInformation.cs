@@ -8,7 +8,7 @@ namespace ASM.Data.Entities
         public BillingStatus? Status { get; set; }
         public DateTime? ExpireIn { get; set; }
 
-        public Guid SellerId { get; set; }
+        public Guid? SellerId { get; set; }
         public virtual Seller Seller { get; set; }
     }
 }

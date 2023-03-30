@@ -13,5 +13,7 @@ namespace ASM.Data
         public virtual DbSet<Seller> Sellers { get; set; }
         public virtual DbSet<SellerMessage> SellerMessages { get; set; }
         public virtual DbSet<PaymentInformation> PaymentInformations { get; set; }
+        public virtual DbSet<MeliAccount> MeliAccounts { get; set; }
+        
     }
 }

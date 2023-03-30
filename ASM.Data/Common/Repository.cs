@@ -42,7 +42,7 @@ namespace ASM.Data.Common
             }
         }
 
-        public TEntity? Get(Guid id)
+        public virtual TEntity? Get(Guid id)
         {
             return dbSet.FirstOrDefault(x => x.Id == id);
         }
