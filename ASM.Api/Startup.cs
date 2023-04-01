@@ -66,10 +66,10 @@ namespace ASM.Api
                 };
             });
 
-           /* services.AddAuthorization(options =>
-            {
-                options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-            });*/
+            /* services.AddAuthorization(options =>
+             {
+                 options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+             });*/
 
         }
 

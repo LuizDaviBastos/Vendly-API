@@ -2,8 +2,10 @@
 using ASM.Data.Interfaces;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using Newtonsoft.Json;
 using RestSharp;
 using System.Net;
+using System.Text;
 
 namespace ASM.Services
 {
@@ -23,9 +25,12 @@ namespace ASM.Services
             this.sellerService = sellerService;
         }
 
-        public string GetAuthUrl(string countryId)
+        public string GetAuthUrl(string countryId, StateUrl? state)
         {
-            var authUrl = $"{{0}}/authorization?response_type=code&client_id={asmConfiguration.AppId}&redirect_uri={asmConfiguration.RedirectUrl}";
+            string stateBase64 = string.Empty;
+            if(state != null) stateBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(state)));
+
+            var authUrl = $"{{0}}/authorization?response_type=code&client_id={asmConfiguration.AppId}&redirect_uri={asmConfiguration.RedirectUrl}&state={stateBase64}";
             return string.Format(authUrl, asmConfiguration.Countries?[countryId.ToUpper()]);
         }
 

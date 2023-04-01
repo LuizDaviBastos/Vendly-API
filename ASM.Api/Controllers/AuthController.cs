@@ -3,12 +3,10 @@ using ASM.Api.Models;
 using ASM.Data.Entities;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
-using DnsClient;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using SharpCompress.Common;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -26,7 +24,10 @@ namespace ASM.Api.Controllers
         private readonly AsmConfiguration asmConfiguration;
         private readonly UserManager<Seller> userManager;
 
-        public AuthController(IMeliService meliService, AsmConfiguration asmConfiguration, ISellerService sellerService, UserManager<Seller> userManager)
+        public AuthController(IMeliService meliService, 
+            AsmConfiguration asmConfiguration, 
+            ISellerService sellerService, 
+            UserManager<Seller> userManager)
         {
             this.meliService = meliService;
             this.asmConfiguration = asmConfiguration;
@@ -39,7 +40,7 @@ namespace ASM.Api.Controllers
         {
             if (string.IsNullOrEmpty(countryId) || !asmConfiguration.Countries.ContainsKey(countryId.ToUpper())) return BadRequest("invalid country");
 
-            return Ok(RequestResponse.GetSuccess(meliService.GetAuthUrl(countryId), "success"));
+            return Ok(RequestResponse.GetSuccess(meliService.GetAuthUrl(countryId, null), "success"));
         }
 
         [HttpPost("SaveAccount")]
@@ -77,37 +78,6 @@ namespace ASM.Api.Controllers
 
         }
 
-        [HttpPost("SyncMeliAccount")]
-        [Authorize]
-        public async Task<IActionResult> SyncMeliAccount([FromBody] SynMeliAccount syncAccount)
-        {
-            try
-            {
-                if(Guid.TryParse(User.Claims.FirstOrDefault(x => x.Type == "UserId")?.Value, out Guid sellerId))
-                {
-                    var accessToken = await meliService.GetAccessTokenAsync(syncAccount.Code);
-                    if (accessToken.Success ?? false)
-                    {
-                        var addResult = await sellerService.AddMeliAccount(sellerId, accessToken);
-                        if (addResult.Item2)
-                        {
-                            return Ok(RequestResponse.GetSuccess());
-                        }
-
-                        return BadRequest(RequestResponse.GetError(addResult.Item1));
-                    }
-
-                    return BadRequest(RequestResponse.GetError(accessToken.Message));
-                }
-                return BadRequest(RequestResponse.GetError("User id not found"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-
-        }
-
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest login)
         {
@@ -133,9 +103,60 @@ namespace ASM.Api.Controllers
             try
             {
                 var result = Uteis.IsAuthenticated(token, asmConfiguration);
-                if(result) return Ok(true);
+                if (result) return Ok(true);
 
                 return Unauthorized(false);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("SyncMeliAccount")]
+        public async Task<IActionResult> SyncMeliAccount(string code, string? state)
+        {
+            try
+            {
+                if(StateUrl.TryGetState(state, out StateUrl stateOut) && !string.IsNullOrEmpty(code)) 
+                {
+                    var accessToken = await meliService.GetAccessTokenAsync(code);
+                    if (accessToken.Success ?? false)
+                    {
+                        var addResult = await sellerService.AddMeliAccount(stateOut.SellerId, accessToken);
+                        if (addResult.Item2)
+                        {
+                            return Redirect("asm.app://message");
+                        }
+
+                        return BadRequest(RequestResponse.GetError(addResult.Item1)); //TODO redirect to Error Razor Page
+                    }
+
+                    return BadRequest(RequestResponse.GetError(accessToken.Message));
+                }
+                
+                return BadRequest(RequestResponse.GetError("User id not found"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+        }
+
+        [HttpGet("SyncMeli")]
+        [Authorize]
+        public IActionResult SyncMeli()
+        {
+            try
+            {
+                if (Guid.TryParse(User.Claims.FirstOrDefault(x => x.Type == "UserId")?.Value, out Guid sellerId))
+                {
+                    var url = this.meliService.GetAuthUrl("br", new() { SellerId = sellerId});
+                    return Redirect(url);
+                }
+
+                return BadRequest(RequestResponse.GetError("")); //TODO redirect to Error Razor Page
             }
             catch (Exception ex)
             {
