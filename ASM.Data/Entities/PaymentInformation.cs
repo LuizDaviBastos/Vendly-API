@@ -3,8 +3,9 @@ using System;
 
 namespace ASM.Data.Entities
 {
-    public class PaymentInformation : EntityBase
+    public class PaymentInformation : IEntityBase
     {
+        public Guid Id { get; set; }
         public BillingStatus? Status { get; set; }
         public DateTime? ExpireIn { get; set; }
 

@@ -9,6 +9,7 @@ namespace ASM.Data
         private readonly AsmContext asmContext;
         private ISellerRepository sellerRepository;
         private IMeliAccountRepository meliAccountRepository;
+        private IMessageRepository messageRepository;
 
         public UnitOfWork(AsmContext asmContext)
         {
@@ -30,6 +31,15 @@ namespace ASM.Data
             {
                 if (meliAccountRepository == null) meliAccountRepository = new MeliAccountRepository(asmContext);
                 return meliAccountRepository;
+            }
+        }
+
+        public IMessageRepository MessageRepository
+        {
+            get
+            {
+                if (messageRepository == null) messageRepository = new MessageRepository(asmContext);
+                return messageRepository;
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using ASM.Core.Interfaces;
 using ASM.Data.Entities;
+using ASM.Data.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,6 @@ namespace ASM.Data.Interfaces
         public Seller? GetByMeliSellerId(long sellerId);
         public Seller? GetByAccessToken(string accessToken);
         public Task<Seller?> GetByEmailAsync(string email);
-        public IQueryable<Seller> GetQueryable();
         public void DisableSeller(Seller seller);
         public void EnableSeller(Seller seller);
         public IEnumerable<Seller> GetActiveBillings();

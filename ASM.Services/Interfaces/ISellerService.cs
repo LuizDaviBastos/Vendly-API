@@ -12,7 +12,7 @@ namespace ASM.Services.Interfaces
         Task<(string, bool)> AddMeliAccount(Guid sellerId, AccessToken accessToken);
         Task<(MeliAccount?, bool)> UpdateTokenMeliAccount(AccessToken accessToken);
         Task<SellerMessage> GetMessageByMeliSellerId(long meliSellerId, MessageType messageType);
-        Task<LoginResponse> Login(string email, string password);
         Task<Seller?> GetSellerInfo(Guid sellerId);
+        Task<bool> HasMeliAccount(Guid sellerId);
     }
 }

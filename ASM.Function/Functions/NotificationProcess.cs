@@ -71,7 +71,7 @@ namespace ASM.Core.Function.Functions
                     }
                     else
                     {
-                        log.LogInformation($"Message not defined sellerId: {sellerMessage?.SellerId}");
+                        log.LogInformation($"Message not defined MeliAccountId: {sellerMessage?.MeliAccountId}");
                     }
                 }
             }

@@ -26,6 +26,7 @@ namespace ASM.Services.Helpers
             string connectionString = configuration.GetConnectionString("AsmConnection");
             services.AddDbContext<AsmContext>(options => options.UseSqlServer(connectionString));
 
+
             return services;
         }
 

@@ -38,11 +38,6 @@ namespace ASM.Data.Common
             return dbSet.FirstOrDefault(x => x.MeliAccounts.Any(x => x.MeliSellerId == meliSellerId));
         }
 
-        public IQueryable<Seller> GetQueryable()
-        {
-            return dbSet;
-        }
-
         public SellerMessage? UpdateMessage(SellerMessage sellerMessage)
         {
             var entity = dbContext.Set<SellerMessage>().FirstOrDefault(x => x.Id == sellerMessage.Id);

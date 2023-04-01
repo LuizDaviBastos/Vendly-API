@@ -1,6 +1,8 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
+#nullable disable
+
 namespace ASM.Data.Migrations
 {
     public partial class initial : Migration
@@ -14,8 +16,20 @@ namespace ASM.Data.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -39,8 +53,7 @@ namespace ASM.Data.Migrations
                         name: "FK_MeliAccounts_Sellers_SellerId",
                         column: x => x.SellerId,
                         principalTable: "Sellers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -59,8 +72,7 @@ namespace ASM.Data.Migrations
                         name: "FK_PaymentInformations_Sellers_SellerId",
                         column: x => x.SellerId,
                         principalTable: "Sellers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -71,17 +83,16 @@ namespace ASM.Data.Migrations
                     Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Activated = table.Column<bool>(type: "bit", nullable: false),
                     Type = table.Column<int>(type: "int", nullable: false),
-                    SellerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    MeliAccountId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SellerMessages", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SellerMessages_Sellers_SellerId",
-                        column: x => x.SellerId,
-                        principalTable: "Sellers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        name: "FK_SellerMessages_MeliAccounts_MeliAccountId",
+                        column: x => x.MeliAccountId,
+                        principalTable: "MeliAccounts",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -97,21 +108,21 @@ namespace ASM.Data.Migrations
                 filter: "[SellerId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SellerMessages_SellerId",
+                name: "IX_SellerMessages_MeliAccountId",
                 table: "SellerMessages",
-                column: "SellerId");
+                column: "MeliAccountId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "MeliAccounts");
-
-            migrationBuilder.DropTable(
                 name: "PaymentInformations");
 
             migrationBuilder.DropTable(
                 name: "SellerMessages");
+
+            migrationBuilder.DropTable(
+                name: "MeliAccounts");
 
             migrationBuilder.DropTable(
                 name: "Sellers");

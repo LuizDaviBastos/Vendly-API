@@ -77,49 +77,26 @@ namespace ASM.Services
         public async Task<SellerMessage?> GetMessageByMeliSellerId(long meliSellerId, MessageType messageType)
         {
             var seller = unitOfWork.SellerRepository.GetQueryable()
-                .Select(x => new Seller { Messages = x.Messages, MeliAccounts = x.MeliAccounts})
+                .Select(x => new Seller { MeliAccounts = x.MeliAccounts})
                 .FirstOrDefault(x => x.MeliAccounts.Any(y => y.MeliSellerId == meliSellerId));
 
             if (seller != null)
             {
-                return seller?.Messages?.FirstOrDefault(x => x.Type == messageType);
+                return seller?.MeliAccounts?.FirstOrDefault(x => x.MeliSellerId == meliSellerId)?.Messages.FirstOrDefault(x => x.Type == messageType);
             }
 
             return null;
         }
 
-        public async Task<LoginResponse> Login(string email, string password)
-        {
-            var entity = await unitOfWork.SellerRepository.GetQueryable().Where(x => x.Email.ToLower() == email.ToLower() && x.Password == password)
-                .Select(x => new
-                {
-                    Seller = x,
-                    HasMeliAccount = x.MeliAccounts.Any()
-                }).FirstOrDefaultAsync();
-
-            if(entity != null)
-            {
-                return new()
-                {
-                    Message = "Success",
-                    Success = true,
-                    HasMeliAccount = entity.HasMeliAccount,
-                    Data = entity.Seller
-                };
-            }
-
-            return new()
-            {
-                Success = false,
-                Message = "Email ou senha incorreto"
-            };
-        }
-
         public async Task<Seller?> GetSellerInfo(Guid sellerId)
         {
             return await unitOfWork.SellerRepository.GetQueryable().Where(x => x.Id == sellerId)
-                .Include(x => x.Messages)
                 .Include(x => x.MeliAccounts).FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> HasMeliAccount(Guid sellerId)
+        {
+            return await unitOfWork.MeliAccountRepository.GetQueryable().Where(x => x.SellerId == sellerId).AnyAsync();
         }
     }
 }

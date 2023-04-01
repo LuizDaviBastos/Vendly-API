@@ -3,14 +3,14 @@ using System;
 
 namespace ASM.Data.Entities
 {
-    public class SellerMessage : EntityBase
+    public class SellerMessage : IEntityBase
     {
+        public Guid Id { get; set; }
         public string? Message { get; set; }
         public bool Activated { get; set; }
         public MessageType Type { get; set; }
 
-        public Guid? SellerId { get; set; }
-        public virtual Seller Seller { get; set; }
-        
+        public Guid? MeliAccountId { get; set; }
+        public virtual MeliAccount MeliAccount { get; set; }
     }
 }

@@ -7,19 +7,22 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
+#nullable disable
+
 namespace ASM.Data.Migrations
 {
     [DbContext(typeof(AsmContext))]
-    [Migration("20230329233557_initial")]
+    [Migration("20230331232129_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .UseIdentityColumns()
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.0");
+                .HasAnnotation("ProductVersion", "6.0.15")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
             modelBuilder.Entity("ASM.Data.Entities.MeliAccount", b =>
                 {
@@ -78,9 +81,17 @@ namespace ASM.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -90,8 +101,34 @@ namespace ASM.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Password")
-                        .IsRequired()
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -108,18 +145,18 @@ namespace ASM.Data.Migrations
                     b.Property<bool>("Activated")
                         .HasColumnType("bit");
 
+                    b.Property<Guid?>("MeliAccountId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Message")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("SellerId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SellerId");
+                    b.HasIndex("MeliAccountId");
 
                     b.ToTable("SellerMessages");
                 });
@@ -144,11 +181,16 @@ namespace ASM.Data.Migrations
 
             modelBuilder.Entity("ASM.Data.Entities.SellerMessage", b =>
                 {
-                    b.HasOne("ASM.Data.Entities.Seller", "Seller")
+                    b.HasOne("ASM.Data.Entities.MeliAccount", "MeliAccount")
                         .WithMany("Messages")
-                        .HasForeignKey("SellerId");
+                        .HasForeignKey("MeliAccountId");
 
-                    b.Navigation("Seller");
+                    b.Navigation("MeliAccount");
+                });
+
+            modelBuilder.Entity("ASM.Data.Entities.MeliAccount", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("ASM.Data.Entities.Seller", b =>
@@ -157,8 +199,6 @@ namespace ASM.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("MeliAccounts");
-
-                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

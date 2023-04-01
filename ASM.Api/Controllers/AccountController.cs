@@ -1,11 +1,16 @@
-﻿using ASM.Services.Interfaces;
+﻿using ASM.Api.Models;
+using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 
 namespace ASM.Api.Controllers
 {
+
+    [Route("api/[controller]")]
+    [Authorize]
     public class AccountController : Controller
     {
         private readonly IMeliService meliService;
@@ -24,7 +29,8 @@ namespace ASM.Api.Controllers
             {
                 var sellerInfo = await sellerService.GetSellerInfo(sellerId);
 
-                return Ok(sellerInfo);
+                if (sellerInfo != null) return Ok(RequestResponse.GetSuccess(sellerInfo));
+                return BadRequest(RequestResponse.GetError("Usuario não encontrado"));
             }
             catch (Exception ex)
             {
@@ -33,14 +39,14 @@ namespace ASM.Api.Controllers
         }
 
         [HttpGet("GetMeliSellerInfo")]
-        public async Task<IActionResult> GetSellerInfo(long meliSellerId)
+        public async Task<IActionResult> GetMeliSellerInfo(long meliSellerId)
         {
             try
             {
-                var sellerInfo = await meliService.GetSellerInfoByMeliSellerId(meliSellerId);
+                var sellerInfo = await meliService.GetMeliSellerInfo(meliSellerId);
 
-                if(sellerInfo.Success ?? false) return Ok(sellerInfo);
-                return BadRequest(sellerInfo);
+                if(sellerInfo.Success ?? false) return Ok(RequestResponse.GetSuccess(sellerInfo));
+                return BadRequest(RequestResponse.GetError(sellerInfo.Message));
             }
             catch (Exception ex)
             {

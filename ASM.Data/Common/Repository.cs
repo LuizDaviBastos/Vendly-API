@@ -1,12 +1,13 @@
 ﻿using ASM.Core.Interfaces;
 using ASM.Data.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 
 namespace ASM.Data.Common
 {
-    public class Repository<TEntity> : IRepository<TEntity, Guid> where TEntity : EntityBase
+    public class Repository<TEntity> : IRepository<TEntity, Guid> where TEntity : class, IEntityBase
     {
         protected DbSet<TEntity> dbSet { get; set; }
         protected AsmContext dbContext { get; set; }
@@ -45,6 +46,11 @@ namespace ASM.Data.Common
         public virtual TEntity? Get(Guid id)
         {
             return dbSet.FirstOrDefault(x => x.Id == id);
+        }
+
+        public IQueryable<TEntity> GetQueryable()
+        {
+            return dbSet;
         }
     }
 }

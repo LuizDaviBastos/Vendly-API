@@ -11,5 +11,6 @@ namespace ASM.Core.Interfaces
         public void Update(TEntity entity);
         public void Delete(IdType id);
         public TEntity? Get(IdType id);
+        public IQueryable<TEntity> GetQueryable();
     }
 }

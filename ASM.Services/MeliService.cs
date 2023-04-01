@@ -146,7 +146,7 @@ namespace ASM.Services
             throw new Exception(result.Content);
         }
 
-        public async Task<SellerInfo> GetSellerInfoByMeliSellerId(long meliSellerId, bool tryAgain = true)
+        public async Task<SellerInfo> GetMeliSellerInfo(long meliSellerId, bool tryAgain = true)
         {
             if (!SetAccessToken(meliSellerId, out MeliAccount? meliAccount)) throw new Exception($"SetAccessToken Error{(meliAccount == null || meliAccount?.Id == Guid.Empty ? ". Seller not found" : "")}");
 
@@ -161,7 +161,7 @@ namespace ASM.Services
             }
             else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
             {
-                return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetSellerInfoByMeliSellerId(meliSellerId, false));
+                return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetMeliSellerInfo(meliSellerId, false));
             }
 
             throw new Exception(result.Content);
