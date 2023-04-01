@@ -83,19 +83,23 @@ namespace ASM.Api.Controllers
         {
             try
             {
-                var accessToken = await meliService.GetAccessTokenAsync(syncAccount.Code);
-                if (accessToken.Success ?? false)
+                if(Guid.TryParse(User.Claims.FirstOrDefault(x => x.Type == "UserId")?.Value, out Guid sellerId))
                 {
-                    var addResult = await sellerService.AddMeliAccount(syncAccount.SellerId, accessToken);
-                    if (addResult.Item2)
+                    var accessToken = await meliService.GetAccessTokenAsync(syncAccount.Code);
+                    if (accessToken.Success ?? false)
                     {
-                        return Ok(RequestResponse.GetSuccess());
+                        var addResult = await sellerService.AddMeliAccount(sellerId, accessToken);
+                        if (addResult.Item2)
+                        {
+                            return Ok(RequestResponse.GetSuccess());
+                        }
+
+                        return BadRequest(RequestResponse.GetError(addResult.Item1));
                     }
 
-                    return BadRequest(RequestResponse.GetError(addResult.Item1));
+                    return BadRequest(RequestResponse.GetError(accessToken.Message));
                 }
-
-                return BadRequest(RequestResponse.GetError(accessToken.Message));
+                return BadRequest(RequestResponse.GetError("User id not found"));
             }
             catch (Exception ex)
             {
