@@ -6,7 +6,7 @@ namespace ASM.Data
 {
     public class AsmContext : DbContext
     {
-        private string connectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=asmdb;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False";
+        private string connectionString;
 
         public AsmContext()
         {

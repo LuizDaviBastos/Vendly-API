@@ -76,7 +76,7 @@ namespace ASM.Services
 
         public async Task<SellerMessage?> GetMessageByMeliSellerId(long meliSellerId, MessageType messageType)
         {
-            var meliAccount = await unitOfWork.MeliAccountRepository.GetQueryable()
+            var meliAccount = await unitOfWork.MeliAccountRepository.GetQueryable().Include(x => x.Messages)
                 .FirstOrDefaultAsync(x => x.MeliSellerId == meliSellerId);
             return meliAccount?.Messages?.FirstOrDefault(x => x.Type == messageType);
         }

@@ -24,7 +24,7 @@ namespace ASM.Services.Helpers
             services.AddSingleton(client.GetDatabase("ASMAPP"));
 
             string connectionString = configuration.GetConnectionString("AsmConnection");
-            services.AddDbContext<AsmContext>(options => options.UseSqlServer(connectionString));
+            services.AddScoped<AsmContext>(x => new(connectionString));
 
 
             return services;
