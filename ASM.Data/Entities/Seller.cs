@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace ASM.Data.Entities
 {
@@ -8,8 +9,9 @@ namespace ASM.Data.Entities
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        
+
         public virtual PaymentInformation BillingInformation { get; set; }
+
         public virtual IList<MeliAccount> MeliAccounts { get; set; }
     }
 }

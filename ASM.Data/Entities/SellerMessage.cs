@@ -1,5 +1,6 @@
 ﻿using ASM.Data.Enums;
 using System;
+using System.Text.Json.Serialization;
 
 namespace ASM.Data.Entities
 {
@@ -11,6 +12,8 @@ namespace ASM.Data.Entities
         public MessageType Type { get; set; }
 
         public Guid? MeliAccountId { get; set; }
+
+        [JsonIgnore]
         public virtual MeliAccount MeliAccount { get; set; }
     }
 }

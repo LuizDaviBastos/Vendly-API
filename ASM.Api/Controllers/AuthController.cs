@@ -1,12 +1,15 @@
 ﻿using ASM.Api.Helpers;
 using ASM.Api.Models;
 using ASM.Data.Entities;
+using ASM.Data.Interfaces;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver.Core.Servers;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -21,18 +24,21 @@ namespace ASM.Api.Controllers
     {
         private readonly IMeliService meliService;
         private readonly ISellerService sellerService;
+        private readonly IUnitOfWork uow;
         private readonly AsmConfiguration asmConfiguration;
         private readonly UserManager<Seller> userManager;
 
         public AuthController(IMeliService meliService, 
             AsmConfiguration asmConfiguration, 
             ISellerService sellerService, 
-            UserManager<Seller> userManager)
+            UserManager<Seller> userManager,
+            IUnitOfWork uow)
         {
             this.meliService = meliService;
             this.asmConfiguration = asmConfiguration;
             this.sellerService = sellerService;
             this.userManager = userManager;
+            this.uow = uow;
         }
 
         [HttpGet("GetAuthUrl")]
@@ -98,14 +104,12 @@ namespace ASM.Api.Controllers
         }
 
         [HttpGet("IsAuthenticated")]
-        public IActionResult IsAuthenticated(string token)
+        public async Task<IActionResult> IsAuthenticated(string token, Guid sellerId)
         {
             try
             {
-                var result = Uteis.IsAuthenticated(token, asmConfiguration);
-                if (result) return Ok(true);
-
-                return Unauthorized(false);
+                bool tokenIsValid = Uteis.IsAuthenticated(token, asmConfiguration);
+                return Ok(tokenIsValid);
             }
             catch (Exception ex)
             {
@@ -145,14 +149,13 @@ namespace ASM.Api.Controllers
         }
 
         [HttpGet("SyncMeli")]
-        [Authorize]
-        public IActionResult SyncMeli()
+        public IActionResult SyncMeli(string countryId, string token)
         {
             try
             {
-                if (Guid.TryParse(User.Claims.FirstOrDefault(x => x.Type == "UserId")?.Value, out Guid sellerId))
+                if(Uteis.TryGetUserId(token, out Guid sellerId))
                 {
-                    var url = this.meliService.GetAuthUrl("br", new() { SellerId = sellerId});
+                    var url = this.meliService.GetAuthUrl(countryId, new() { SellerId = sellerId });
                     return Redirect(url);
                 }
 
@@ -169,13 +172,14 @@ namespace ASM.Api.Controllers
             var user = await userManager.FindByEmailAsync(login.Email);
             if (user != null && await userManager.CheckPasswordAsync(user, login.Password))
             {
+                user.MeliAccounts = uow.MeliAccountRepository.GetQueryable().Include(x => x.Messages).Where(x => x.SellerId == user.Id).ToList();
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(new Claim[]
                 {
                         new Claim("UserId", user.Id.ToString())
                 }),
-                    Expires = DateTime.UtcNow.AddMilliseconds(5),
+                    Expires = DateTime.UtcNow.AddDays(30),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(asmConfiguration.JwtKey)), SecurityAlgorithms.HmacSha256Signature)
                 };
                 var tokenHandler = new JwtSecurityTokenHandler();
@@ -191,7 +195,7 @@ namespace ASM.Api.Controllers
                 return loginResponse;
             }
 
-            return new() { Success = false, Message = "Ususario ou senha inválido" };
+            return new() { Success = false, Message = "Usuario ou senha inválido" };
         }
     }
 }

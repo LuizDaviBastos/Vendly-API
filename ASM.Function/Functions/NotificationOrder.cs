@@ -12,13 +12,13 @@ using System.Threading.Tasks;
 
 namespace ASM.Core.Function.Functions
 {
-    public class NotificationProcess
+    public class NotificationOrder
     {
         private readonly IUnitOfWork uow;
         private readonly IMeliService meliService;
         private readonly ISellerService sellerService;
 
-        public NotificationProcess(IUnitOfWork uow, IMeliService meliService, ISellerService sellerService)
+        public NotificationOrder(IUnitOfWork uow, IMeliService meliService, ISellerService sellerService)
         {
             this.uow = uow;
             this.meliService = meliService;
@@ -37,7 +37,6 @@ namespace ASM.Core.Function.Functions
 
             //Can send after seller messages
             var sellerMessage = await sellerService.GetMessageByMeliSellerId(notification.user_id, MessageType.AfterSeller);
-
             if (!(sellerMessage?.Activated ?? false)) return;
 
             //TODO - https://developers.mercadolivre.com.br/pt_br/aplicativos#Usu%C3%A1rios-que-outorgaram-licen%C3%A7as-a-seu-aplicativo
@@ -67,7 +66,7 @@ namespace ASM.Core.Function.Functions
                         //Prepare sellerMessage
                         sendMessage.Message = Utils.PrepareSellerMessage(sellerMessage.Message, order);
                         await meliService.SendMessageToBuyerAsync(sendMessage);
-                        log.LogInformation($"message sent successfully to BuyerId:{order.buyer.id}");
+                        log.LogInformation($"message sent successfully to BuyerId: {order.buyer.id} | type: AfterSeller");
                     }
                     else
                     {

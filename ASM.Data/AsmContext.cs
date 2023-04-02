@@ -13,11 +13,21 @@ namespace ASM.Data
 
         }
 
+        public AsmContext(string connectionString)
+        {
+            this.connectionString = connectionString;
+        }
+
         public AsmContext(DbContextOptions options) : base(options)
         {
             
         }
 
+        public static void Migrate(string connectionString)
+        {
+            var context = new AsmContext(connectionString);
+            context.Database.Migrate();
+        }
         
 
         public virtual DbSet<Seller> Sellers { get; set; }

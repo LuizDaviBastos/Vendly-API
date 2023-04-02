@@ -1,5 +1,6 @@
 ﻿using ASM.Data.Enums;
 using System;
+using System.Text.Json.Serialization;
 
 namespace ASM.Data.Entities
 {
@@ -10,6 +11,8 @@ namespace ASM.Data.Entities
         public DateTime? ExpireIn { get; set; }
 
         public Guid? SellerId { get; set; }
+
+        [JsonIgnore]
         public virtual Seller Seller { get; set; }
     }
 }

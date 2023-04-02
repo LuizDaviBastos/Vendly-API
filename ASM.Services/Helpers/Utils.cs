@@ -6,7 +6,8 @@ namespace ASM.Services.Helpers
     {
         public static string PrepareSellerMessage(string message, Order order)
         {
-            return message.Replace("@COMPRADOR", order?.buyer?.first_name);
+            string productTitle = order.order_items?.FirstOrDefault()?.item?.title ?? string.Empty;
+            return message.Replace("@COMPRADOR", order?.buyer?.first_name).Replace("@PRODUTO", productTitle);
         }
     }
 }

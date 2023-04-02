@@ -4,6 +4,7 @@ using ASM.Data.Enums;
 using ASM.Data.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
 
 namespace ASM.Api.Controllers
@@ -21,15 +22,15 @@ namespace ASM.Api.Controllers
         [HttpPost("Update")]
         public async Task<IActionResult> Message([FromBody] SellerMessage updateMessage)
         {
-            uow.MessageRepository.Update(updateMessage);
+            uow.MessageRepository.AddOrUpdate(updateMessage);
             await uow.CommitAsync();
             return Ok(RequestResponse.GetSuccess(updateMessage));
         }
 
         [HttpGet("Get")]
-        public IActionResult Message(long meliSellerId, MessageType messageType)
+        public IActionResult Message(Guid meliAccountId, MessageType messageType)
         {
-            var message = uow.MessageRepository.GetMessage(meliSellerId, messageType);
+            var message = uow.MessageRepository.GetMessage(meliAccountId, messageType);
             return Ok(RequestResponse.GetSuccess(message));
         }
     }

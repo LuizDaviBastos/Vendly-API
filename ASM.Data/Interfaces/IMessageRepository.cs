@@ -7,6 +7,6 @@ namespace ASM.Data.Interfaces
 {
     public interface IMessageRepository : IRepository<SellerMessage, Guid>
     {
-        public SellerMessage? GetMessage(long meliSellerId, MessageType messageType);
+        public SellerMessage? GetMessage(Guid meliAccountId, MessageType messageType);
     }
 }

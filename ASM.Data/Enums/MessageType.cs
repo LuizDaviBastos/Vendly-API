@@ -4,6 +4,6 @@
     {
         AfterSeller,
         Sent,
-        Completed
+        Delivered
     }
 }

@@ -53,5 +53,19 @@ namespace ASM.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpGet("HasMeliAccount")]
+        public async Task<IActionResult> HasMeliAccount(Guid sellerId)
+        {
+            try
+            {
+                bool hasMeliAccount = await sellerService.HasMeliAccount(sellerId);
+                return Ok(hasMeliAccount);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

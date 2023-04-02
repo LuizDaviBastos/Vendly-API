@@ -75,12 +75,14 @@ namespace ASM.Api
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            AsmContext.Migrate(Configuration.GetConnectionString("AsmConnection"));
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
             else
             {
+                
                 app.UseExceptionHandler("/Error");
 
                 app.UseHsts();
