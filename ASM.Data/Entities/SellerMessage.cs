@@ -1,5 +1,6 @@
 ﻿using ASM.Data.Enums;
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace ASM.Data.Entities
@@ -15,5 +16,8 @@ namespace ASM.Data.Entities
 
         [JsonIgnore]
         public virtual MeliAccount MeliAccount { get; set; }
+
+        [JsonIgnore]
+        public IList<Attachment> Attachments { get; set; }
     }
 }

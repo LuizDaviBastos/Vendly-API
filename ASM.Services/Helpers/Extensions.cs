@@ -18,6 +18,7 @@ namespace ASM.Services.Helpers
             services.AddScoped<IMeliService, MeliService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ISellerService, SellerService>();
+            services.AddScoped<IMessageService, MessageService>();
             services.AddSingleton(x => configuration.Get<AsmConfiguration>());
 
             var client = new MongoClient("mongodb+srv://luiz:80849903D@asmserveless.m1ukj.mongodb.net/?retryWrites=true&w=majority");

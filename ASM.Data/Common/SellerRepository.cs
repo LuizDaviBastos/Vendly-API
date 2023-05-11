@@ -65,6 +65,5 @@ namespace ASM.Data.Common
         {
             return await dbSet.Where(x => x.MeliAccounts.Any(x => x.MeliSellerId == meliSellerId)).Select(x => new Seller { Email = x.Email }).FirstOrDefaultAsync();
         }
-
     }
 }

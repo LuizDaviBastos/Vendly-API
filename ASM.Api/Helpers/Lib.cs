@@ -1,7 +1,9 @@
 ﻿using ASM.Services.Models;
 using Microsoft.IdentityModel.Tokens;
+using RestSharp.Extensions;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -36,6 +38,23 @@ namespace ASM.Api.Helpers
 
             string? userId = token.Claims.FirstOrDefault(x => x.Type == "UserId")?.Value;
             return Guid.TryParse(userId, out UserId);
+        }
+
+        public static string NormalizeFileName(string fileName, string extension)
+        {
+            if (string.IsNullOrEmpty(fileName)) return GetSystemFileName(extension);
+
+            string invalidChars = new string(Path.GetInvalidFileNameChars());
+            fileName = string.Concat(fileName.Split(invalidChars.ToCharArray()));
+            fileName = fileName.Replace(" ", "-");
+            fileName = fileName.ToLowerInvariant();
+            return fileName;
+        }
+
+        private static string GetSystemFileName(string? extension = null)
+        {
+            var date = DateTime.UtcNow;
+            return $"file-{date.Year}{date.Month}{date.Day}{date.Hour}{date.Minute}{date.Second}{date.Millisecond}{(extension?.HasValue() ?? false ? ($".{extension}") : string.Empty )}";
         }
     }
 }

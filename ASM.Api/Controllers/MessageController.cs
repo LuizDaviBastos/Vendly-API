@@ -1,7 +1,7 @@
 ﻿using ASM.Api.Models;
 using ASM.Data.Entities;
 using ASM.Data.Enums;
-using ASM.Data.Interfaces;
+using ASM.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -13,24 +13,23 @@ namespace ASM.Api.Controllers
     [Authorize]
     public class MessageController : Controller
     {
-        private readonly IUnitOfWork uow;
-        public MessageController(IUnitOfWork uow)
+        private readonly IMessageService messageService;
+        public MessageController(IMessageService messageService)
         {
-            this.uow = uow;
+            this.messageService = messageService;
         }
 
         [HttpPost("Update")]
         public async Task<IActionResult> Message([FromBody] SellerMessage updateMessage)
         {
-            uow.MessageRepository.AddOrUpdate(updateMessage);
-            await uow.CommitAsync();
+            await messageService.UpdateMessage(updateMessage);
             return Ok(RequestResponse.GetSuccess(updateMessage));
         }
 
         [HttpGet("Get")]
-        public IActionResult Message(Guid meliAccountId, MessageType messageType)
+        public async Task<IActionResult> Message(Guid meliAccountId, MessageType messageType)
         {
-            var message = uow.MessageRepository.GetMessage(meliAccountId, messageType);
+            var message = await messageService.GetMessage(meliAccountId, messageType);
             return Ok(RequestResponse.GetSuccess(message));
         }
     }

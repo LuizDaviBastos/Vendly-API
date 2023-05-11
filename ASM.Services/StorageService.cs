@@ -1,5 +1,6 @@
 ﻿using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using Azure.Storage.Blobs;
 using Azure.Storage.Queues;
 using Newtonsoft.Json;
 using System.Text;
@@ -29,6 +30,32 @@ namespace ASM.Services
                 throw new Exception(ex.Message);
             }
             
+        }
+
+        public async Task Upload(Stream stream, Guid sellerId, string fileName)
+        {
+            BlobClient blobClient = new(configuration.AzureWebJobsStorage, "asmstorage", Path.Combine("attachments", sellerId.ToString(), fileName));
+            var result = await blobClient.UploadAsync(stream);
+        }
+
+        public async Task<MemoryStream> Download(Guid sellerId, string fileName)
+        {
+            BlobClient blobClient = new(configuration.AzureWebJobsStorage, "asmstorage", Path.Combine("attachments", sellerId.ToString(), fileName));
+            MemoryStream stream = new();
+            await blobClient.DownloadToAsync(stream);
+            return stream;
+        }
+
+        public async Task<List<MemoryStream>> Download(Guid sellerId, IEnumerable<string> fileNames)
+        {
+            List<MemoryStream> files = new List<MemoryStream>();
+            foreach (var fileName in fileNames)
+            {
+                var ms = await Download(sellerId, fileName);
+                files.Add(ms);
+            }
+
+            return files;
         }
     }
 }
