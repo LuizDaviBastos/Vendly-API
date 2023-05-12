@@ -4,8 +4,9 @@ using System.Linq;
 
 namespace ASM.Api.Controllers
 {
-    public class AsmBaseController : Controller
+    public abstract class AsmBaseController : Controller
     {
+        [ApiExplorerSettings(IgnoreApi = true)]
         public bool TryGetSellerId(out Guid sellerId)
         {
             string? claimResult = HttpContext.User.Claims.FirstOrDefault(x => x.Type == "UserId")?.Value;
