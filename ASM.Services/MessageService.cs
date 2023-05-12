@@ -14,9 +14,22 @@ namespace ASM.Services
             this.uow = unitOfWork;
         }
 
-        public Task<IList<Attachment>> GetAttachments(Guid messageId)
+        public async Task AddAttachment(Attachment attachment)
         {
-            throw new NotImplementedException();
+            uow.MessageRepository.AddAttachment(attachment);
+            await uow.CommitAsync();
+        }
+
+        public async Task<Attachment> DeleteAttachment(Guid attachmentId)
+        {
+            var attachment = uow.MessageRepository.DeleteAttachment(attachmentId);
+            await uow.CommitAsync();
+            return attachment;
+        }
+
+        public async Task<IList<Attachment>> GetAttachments(Guid messageId)
+        {
+            return await uow.MessageRepository.GetAttachments(messageId);
         }
 
         public async Task<SellerMessage?> GetMessage(Guid meliAccountId, MessageType messageType)

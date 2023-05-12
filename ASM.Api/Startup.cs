@@ -5,6 +5,7 @@ using ASM.Services.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -70,6 +71,13 @@ namespace ASM.Api
              {
                  options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
              });*/
+
+            /*services.Configure<FormOptions>(options =>
+            {
+                options.ValueLengthLimit = long.MaxValue;
+                options.MultipartBodyLengthLimit = long.MaxValue; // if don't set default value is: 128 MB
+                options.MultipartHeadersLengthLimit = long.MaxValue;
+            });*/
 
         }
 

@@ -12,5 +12,6 @@ namespace ASM.Data.Interfaces
         public Task<SellerMessage?> GetMessage(Guid meliAccountId, MessageType messageType);
         public void AddAttachment(Attachment attachment);
         public Task<IList<Attachment>> GetAttachments(Guid messageId);
+        public Attachment DeleteAttachment(Guid attachmentId);
     }
 }

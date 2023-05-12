@@ -53,5 +53,15 @@ namespace ASM.Data.Common
 
             return message?.Attachments ?? new List<Attachment>();
         }
+
+        public Attachment DeleteAttachment(Guid attachmentId)
+        {
+            var attachment = dbContext.Set<Attachment>().Include(x => x.Message).FirstOrDefault(x => x.Id == attachmentId);
+            if(attachment != null)
+            {
+                dbContext.Set<Attachment>().Remove(attachment);
+            }
+            return attachment;
+        }
     }
 }

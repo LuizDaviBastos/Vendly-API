@@ -56,5 +56,18 @@ namespace ASM.Api.Helpers
             var date = DateTime.UtcNow;
             return $"file-{date.Year}{date.Month}{date.Day}{date.Hour}{date.Minute}{date.Second}{date.Millisecond}{(extension?.HasValue() ?? false ? ($".{extension}") : string.Empty )}";
         }
+
+        public static string FormatFileSize(long fileSizeInBytes)
+        {
+            string[] units = { "B", "KB", "MB", "GB", "TB" };
+            int index = 0;
+            double fileSize = fileSizeInBytes;
+            while (fileSize >= 1024 && index < units.Length - 1)
+            {
+                fileSize /= 1024;
+                index++;
+            }
+            return string.Format("{0:0.##} {1}", fileSize, units[index]);
+        }
     }
 }

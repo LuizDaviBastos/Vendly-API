@@ -8,5 +8,7 @@ namespace ASM.Services.Interfaces
         public Task UpdateMessage(SellerMessage updateMessage);
         public Task<SellerMessage?> GetMessage(Guid meliAccountId, MessageType messageType);
         public Task<IList<Attachment>> GetAttachments(Guid messageId);
+        public Task AddAttachment(Attachment attachment);
+        public Task<Attachment> DeleteAttachment(Guid attachmentId);
     }
 }
