@@ -5,6 +5,8 @@ using ASM.Services.Helpers;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver.Core.Servers;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ASM.Services
 {
@@ -78,7 +80,13 @@ namespace ASM.Services
         {
             var meliAccount = await unitOfWork.MeliAccountRepository.GetQueryable().Include(x => x.Messages)
                 .FirstOrDefaultAsync(x => x.MeliSellerId == meliSellerId);
-            return meliAccount?.Messages?.FirstOrDefault(x => x.Type == messageType);
+            var message = meliAccount?.Messages?.FirstOrDefault(x => x.Type == messageType);
+            if(message != null)
+            {
+                var attachments = await unitOfWork.MessageRepository.GetAttachments(message.Id);
+                message.Attachments = attachments;
+            }
+            return message;
         }
 
         public async Task<Seller?> GetSellerInfo(Guid sellerId)
@@ -90,6 +98,45 @@ namespace ASM.Services
         public async Task<bool> HasMeliAccount(Guid sellerId)
         {
             return await unitOfWork.MeliAccountRepository.GetQueryable().Where(x => x.SellerId == sellerId).AnyAsync();
+        }
+
+        public async Task<(string, bool)> SendEmailConfirmationCode(Guid sellerId)
+        {
+            var entity = unitOfWork.SellerRepository.Get(sellerId);
+            if (entity != null)
+            {
+                //TODO
+                // 1 - generate code
+                // 2 - save code in database
+                // 2 - send confirmation code to email
+                entity.ConfirmationCode = "123456";
+                unitOfWork.SellerRepository.Update(entity);
+                await unitOfWork.CommitAsync();
+                return ("", true);
+            }
+            return ("Usuário não encontrado", false);
+        }
+
+        public async Task<(string, bool)> ConfirmEmailAsync(Guid sellerId, string code)
+        {
+            var entity = unitOfWork.SellerRepository.Get(sellerId);
+            if(entity != null)
+            {
+                if(entity.ConfirmationCode == code)
+                {
+                    entity.EmailConfirmed = true;
+                    entity.ConfirmationCode = null;
+                    unitOfWork.SellerRepository.Update(entity);
+                    await unitOfWork.CommitAsync();
+                    return ("", true);
+                } 
+                else
+                {
+                    return ("Código inválido", false);
+                }
+                
+            }
+            return ("Usuário não encontrado", false);
         }
     }
 }

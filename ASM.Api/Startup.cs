@@ -38,6 +38,8 @@ namespace ASM.Api
             {
                 options.Password.RequireDigit = true;
                 options.Password.RequiredLength = 8;
+                options.User.RequireUniqueEmail = true;
+                options.SignIn.RequireConfirmedEmail = true;
                 /*
                 options.Password.RequireLowercase = true;
                 options.Password.RequireNonAlphanumeric = true;

@@ -9,5 +9,6 @@ namespace ASM.Services.Models
         public string Message { get; set; }
         public string Token { get; set; }
         public Seller? Data { get; set; }
+        public bool EmailNotConfirmed { get; set; }
     }
 }

@@ -10,7 +10,7 @@
         public int attempts { get; set; }
         public DateTime? received { get; set; }
 
-        public long OrderId 
+        public long TopicId 
         { 
             get
             {
@@ -26,6 +26,7 @@
         }
 
         public bool IsOrderV2 { get => topic == "orders_v2"; }
-        public bool OrderIdIsValid { get => this.OrderId != 0; }
+        public bool IsFeedback { get => topic == "orders_feedback"; }
+        public bool OrderIdIsValid { get => this.TopicId != 0; }
     }
 }

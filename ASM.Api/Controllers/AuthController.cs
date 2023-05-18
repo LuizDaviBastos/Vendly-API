@@ -16,6 +16,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using static ASM.Services.Models.MessagesResponse;
 
 namespace ASM.Api.Controllers
 {
@@ -28,9 +29,9 @@ namespace ASM.Api.Controllers
         private readonly AsmConfiguration asmConfiguration;
         private readonly UserManager<Seller> userManager;
 
-        public AuthController(IMeliService meliService, 
-            AsmConfiguration asmConfiguration, 
-            ISellerService sellerService, 
+        public AuthController(IMeliService meliService,
+            AsmConfiguration asmConfiguration,
+            ISellerService sellerService,
             UserManager<Seller> userManager,
             IUnitOfWork uow)
         {
@@ -57,9 +58,10 @@ namespace ASM.Api.Controllers
                 var entity = new Seller
                 {
                     Email = account.Email,
-                    FirstName = account.FirstName,
-                    LastName = account.LastName,
-                    UserName = account.Email
+                    FirstName = Uteis.GetFirstName(account.FullName),
+                    FullName = account.FullName,
+                    UserName = account.Email,
+                    Country = account.Country
                 };
 
                 var createResult = await userManager.CreateAsync(entity, account.Password);
@@ -76,6 +78,46 @@ namespace ASM.Api.Controllers
                 }
 
                 return BadRequest(RequestResponse.GetError(errors));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+        }
+
+        [HttpGet("SendEmailConfirmation")]
+        public async Task<IActionResult> SendEmailConfirmation(Guid sellerId)
+        {
+            try
+            {
+                (string message, bool status) = await sellerService.SendEmailConfirmationCode(sellerId);
+                if(status)
+                {
+                    return Ok(RequestResponse.GetSuccess());
+                }
+
+                return Ok(RequestResponse.GetError(message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+        }
+
+        [HttpGet("ConfirmEmail")]
+        public async Task<IActionResult> ConfirmEmail(Guid sellerId, string confirmationCode)
+        {
+            try
+            {
+                (string message, bool status) = await sellerService.ConfirmEmailAsync(sellerId, confirmationCode);
+                if (status)
+                {
+                    return Ok(RequestResponse.GetSuccess());
+                }
+
+                return Ok(RequestResponse.GetError(message));
             }
             catch (Exception ex)
             {
@@ -117,45 +159,15 @@ namespace ASM.Api.Controllers
             }
         }
 
-        [HttpGet("SyncMeliAccount")]
-        public async Task<IActionResult> SyncMeliAccount(string code, string? state)
-        {
-            try
-            {
-                if(StateUrl.TryGetState(state, out StateUrl stateOut) && !string.IsNullOrEmpty(code)) 
-                {
-                    var accessToken = await meliService.GetAccessTokenAsync(code);
-                    if (accessToken.Success ?? false)
-                    {
-                        var addResult = await sellerService.AddMeliAccount(stateOut.SellerId, accessToken);
-                        if (addResult.Item2)
-                        {
-                            return Redirect("asm.app://message");
-                        }
-
-                        return BadRequest(RequestResponse.GetError(addResult.Item1)); //TODO redirect to Error Razor Page
-                    }
-
-                    return BadRequest(RequestResponse.GetError(accessToken.Message));
-                }
-                
-                return BadRequest(RequestResponse.GetError("User id not found"));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-
-        }
-
+        //call to sync meli account
         [HttpGet("SyncMeli")]
-        public IActionResult SyncMeli(string countryId, string token)
+        public IActionResult SyncMeli(string countryId, string token, bool signup)
         {
             try
             {
-                if(Uteis.TryGetUserId(token, out Guid sellerId))
+                if (Uteis.TryGetUserId(token, out Guid sellerId))
                 {
-                    var url = this.meliService.GetAuthUrl(countryId, new() { SellerId = sellerId });
+                    var url = this.meliService.GetAuthUrl(countryId, new() { SellerId = sellerId, Signup = signup });
                     return Redirect(url);
                 }
 
@@ -167,9 +179,56 @@ namespace ASM.Api.Controllers
             }
         }
 
+        //dont call
+        [HttpGet("SyncMeliAccount")]
+        public async Task<IActionResult> SyncMeliAccount(string code, string? state)
+        {
+            try
+            {
+                if (StateUrl.TryGetState(state, out StateUrl stateOut) && !string.IsNullOrEmpty(code))
+                {
+                    var accessToken = await meliService.GetAccessTokenAsync(code);
+                    if (accessToken.Success ?? false)
+                    {
+                        var addResult = await sellerService.AddMeliAccount(stateOut.SellerId, accessToken);
+                        if (addResult.Item2)
+                        {
+                            if(stateOut.Signup)
+                            {
+                                return Redirect($"asm.app://auth/signup?step=5");
+                            }
+                            else
+                            {
+                                return Redirect($"asm.app://message");
+                            }
+                            
+                        }
+
+                        return BadRequest(RequestResponse.GetError(addResult.Item1)); //TODO redirect to Error Razor Page
+                    }
+
+                    return BadRequest(RequestResponse.GetError(accessToken.Message));
+                }
+
+                return BadRequest(RequestResponse.GetError("User id not found"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+        }
+
+        [HttpGet("AuthSignup")]
+        public IActionResult AuthSignup()
+        {
+            return Redirect($"asm.app://auth/signup?step=5");
+        }
+
         private async Task<LoginResponse> GetLoginResponseAsync(LoginRequest login)
         {
             var user = await userManager.FindByEmailAsync(login.Email);
+
             if (user != null && await userManager.CheckPasswordAsync(user, login.Password))
             {
                 user.MeliAccounts = uow.MeliAccountRepository.GetQueryable().Include(x => x.Messages).Where(x => x.SellerId == user.Id).ToList();
@@ -189,8 +248,14 @@ namespace ASM.Api.Controllers
                     Data = user,
                     Token = tokenHandler.WriteToken(token),
                     HasMeliAccount = await sellerService.HasMeliAccount(user.Id),
-                    Success = true
+                    Success = true,
                 };
+
+                if (!user.EmailConfirmed)
+                {
+                    loginResponse.EmailNotConfirmed = true;
+                    loginResponse.Message = "Email não verificado.";
+                }
 
                 return loginResponse;
             }

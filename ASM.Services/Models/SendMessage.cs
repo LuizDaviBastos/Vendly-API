@@ -1,4 +1,6 @@
-﻿namespace ASM.Services.Models
+﻿using ASM.Data.Entities;
+
+namespace ASM.Services.Models
 {
     public class SendMessage : RequestResponseBase
     {
@@ -6,6 +8,6 @@
         public long BuyerId { get; set; }
         public string Message { get; set; }
         public long PackId { get; set; }
-
+        public IList<string>? Attachments { get; set; }
     }
 }

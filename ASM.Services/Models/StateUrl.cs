@@ -6,6 +6,7 @@ namespace ASM.Services.Models
     public class StateUrl
     {
         public Guid SellerId { get; set; }
+        public bool Signup { get; set; }
 
         public static bool TryGetState(string? encodedState, out StateUrl stateOut)
         {

@@ -25,7 +25,7 @@ namespace ASM.Api.Controllers
             this.messageService = messageService;
         }
 
-        [RequestFormLimits(ValueLengthLimit = 943718400, MultipartBodyLengthLimit = 943718400)]
+        [RequestFormLimits(ValueLengthLimit = 26214400, MultipartBodyLengthLimit = 26214400)]
         [DisableRequestSizeLimit]
         [HttpPost("Save")]
         public async Task<IActionResult> Save([FromQuery] Guid messageId, [FromQuery] MessageType messageType, [FromForm(Name = "file")] IFormFile file)

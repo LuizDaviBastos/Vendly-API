@@ -16,19 +16,21 @@ namespace ASM.Services
         private readonly IUnitOfWork unitOfWork;
         private readonly AsmConfiguration asmConfiguration;
         private readonly ISellerService sellerService;
+        private readonly IStorageService storageService;
 
-        public MeliService(IUnitOfWork unitOfWork, AsmConfiguration asmConfiguration, ISellerService sellerService)
+        public MeliService(IUnitOfWork unitOfWork, AsmConfiguration asmConfiguration, ISellerService sellerService, IStorageService storageService)
         {
             restClient = new RestClient("https://api.mercadolibre.com");
             this.unitOfWork = unitOfWork;
             this.asmConfiguration = asmConfiguration;
             this.sellerService = sellerService;
+            this.storageService = storageService;
         }
 
         public string GetAuthUrl(string countryId, StateUrl? state)
         {
             string stateBase64 = string.Empty;
-            if(state != null) stateBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(state)));
+            if (state != null) stateBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(state)));
 
             var authUrl = $"{{0}}/authorization?response_type=code&client_id={asmConfiguration.AppId}&redirect_uri={asmConfiguration.RedirectUrl}&state={stateBase64}";
             return string.Format(authUrl, asmConfiguration.Countries?[countryId.ToUpper()]);
@@ -75,9 +77,9 @@ namespace ASM.Services
                 return order;
             }
 
-            RestRequest request = new RestRequest($"/orders/{notification.OrderId}", Method.GET);
+            RestRequest request = new RestRequest($"/orders/{notification.TopicId}", Method.GET);
             request.AddHeader("Authorization", $"Bearer {accessToken}");
-
+            var result2 = await restClient.ExecuteAsync(request);
             var result = await restClient.ExecuteAsync<Order>(request);
             if (result.IsSuccessful)
             {
@@ -97,25 +99,50 @@ namespace ASM.Services
             return order;
         }
 
+        public async Task<OrderFeedback> GetFeedbackDetailsAsync(NotificationTrigger notification, bool tryAgain = true)
+        {
+            var feedback = new OrderFeedback();
+            feedback.Success = false;
+
+            if (!SetAccessToken(notification.user_id, out MeliAccount? meliAccount))
+            {
+                feedback.Message = "Seller not found";
+                return feedback;
+            }
+
+            RestRequest request = new RestRequest($"/orders/{notification.TopicId}/feedback", Method.GET);
+            request.AddHeader("Authorization", $"Bearer {accessToken}");
+            var result = await restClient.ExecuteAsync<OrderFeedback>(request);
+            if (result.IsSuccessful)
+            {
+                feedback = result.Data;
+                feedback.Success = true;
+            }
+            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest)
+            {
+                return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetFeedbackDetailsAsync(notification, false));
+            }
+            else
+            {
+                feedback.Success = false;
+                feedback.Message = result.Content;
+            }
+
+            return feedback;
+        }
+
         public async Task<bool> SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgain = true)
         {
             if (!SetAccessToken(sendMessage.MeliSellerId, out MeliAccount? meliAccount)) return false;
 
+            if (!(sendMessage.Attachments?.Any() ?? false)) sendMessage.Attachments = null;
+
             RestRequest request = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.MeliSellerId}", Method.POST);
             request.AddHeader("Authorization", $"Bearer {this.accessToken}");
-            request.AddQueryParameter("tag", "post_sale")
-            .AddJsonBody(new
-            {
-                from = new
-                {
-                    user_id = sendMessage.MeliSellerId
-                },
-                to = new
-                {
-                    user_id = sendMessage.BuyerId
-                },
-                text = sendMessage.Message
-            });
+            request.AddQueryParameter("tag", "post_sale");
+            
+            var body = new SendMessageRequest(sendMessage.MeliSellerId, sendMessage.BuyerId, sendMessage.Message, sendMessage.Attachments);
+            request.AddJsonBody(body);
 
             var result = await restClient.ExecuteAsync(request);
             if (result.IsSuccessful)
@@ -170,6 +197,32 @@ namespace ASM.Services
             }
 
             throw new Exception(result.Content);
+        }
+
+        public async Task<IList<SaveAttachmentResponse>> SaveAttachments(Guid sellerId, SellerMessage sellerMessage)
+        {
+            List<SaveAttachmentResponse> response = new();
+            if (!sellerMessage.Attachments.Any()) return response;
+            foreach (var attachment in sellerMessage.Attachments)
+            {
+                var attachContent = await storageService.Download(sellerId, sellerMessage.Type, attachment.Name);
+
+                RestRequest restRequest = new RestRequest($"/messages/attachments", Method.POST);
+                restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}")
+                    .AddHeader("content-type", "multipart/form-data")
+                    .AddParameter("tag", "post_sale")
+                    .AddParameter("site_id", "MLB");
+
+                restRequest.AddFileBytes("file", attachContent.ToArray(), attachment.Name);
+
+                var requestResponse = await restClient.ExecuteAsync<SaveAttachmentResponse>(restRequest);
+                if (requestResponse.IsSuccessful)
+                {
+                    response.Add(requestResponse.Data);
+                }
+            }
+
+            return response;
         }
 
         private async Task<TResult> RefreshTokenAndTryAgain<TResult>(string refreshToken, Func<Task<TResult>> func)

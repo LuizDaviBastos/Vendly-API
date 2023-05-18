@@ -2,8 +2,6 @@
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
-using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Queues;
 using Newtonsoft.Json;
 using System.Text;

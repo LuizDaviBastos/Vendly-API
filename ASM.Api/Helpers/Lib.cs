@@ -69,5 +69,10 @@ namespace ASM.Api.Helpers
             }
             return string.Format("{0:0.##} {1}", fileSize, units[index]);
         }
+
+        public static string GetFirstName(string fullName)
+        {
+            return fullName?.Split(" ")?[0] ?? "";
+        }
     }
 }

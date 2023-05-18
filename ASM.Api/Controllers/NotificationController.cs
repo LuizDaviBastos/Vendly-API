@@ -21,10 +21,12 @@ namespace ASM.Api.Controllers
             if (notification.IsOrderV2)
             {
                 await storageService.SendMessageAsync("process-order-notification", notification);
+            } 
+            else if(notification.IsFeedback)
+            {
+                await storageService.SendMessageAsync("process-delivered-notification", notification);
             }
             return Ok();
         }
-
-        //ngrok http -host-header=localhost https://localhost:7024/
     }
 }

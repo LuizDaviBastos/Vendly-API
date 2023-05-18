@@ -6,7 +6,10 @@ using ASM.Services.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
+using System;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,21 +39,26 @@ namespace ASM.Core.Function.Functions
              */
 
             //Can send after seller messages
+            
             var sellerMessage = await sellerService.GetMessageByMeliSellerId(notification.user_id, MessageType.AfterSeller);
             if (!(sellerMessage?.Activated ?? false)) return;
 
             //TODO - https://developers.mercadolivre.com.br/pt_br/aplicativos#Usu%C3%A1rios-que-outorgaram-licen%C3%A7as-a-seu-aplicativo
             if (!notification.OrderIdIsValid)
             {
-                var message = $"Error to get OrderId (OrderId is: {notification.OrderId})";
+                var message = $"Error to get OrderId (OrderId is: {notification.TopicId})";
                 log.LogError(message);
                 throw new System.Exception(message);
             }
 
+            var order2 = await meliService.GetOrderDetailsAsync(notification);
+
+
+
             var sendMessage = new SendMessage
             {
                 MeliSellerId = notification.user_id,
-                PackId = notification.OrderId, //important to send message to buyer
+                PackId = notification.TopicId, //important to send message to buyer
                 Message = sellerMessage.Message
             };
 
@@ -63,6 +71,10 @@ namespace ASM.Core.Function.Functions
                     sendMessage.BuyerId = order.buyer.id;
                     if (!string.IsNullOrEmpty(sellerMessage?.Message))
                     {
+                        Guid sellerId = sellerMessage.MeliAccount.SellerId.Value;
+                        var result = await meliService.SaveAttachments(sellerId, sellerMessage);
+                        if (result.Any()) sendMessage.Attachments = result.Select(x => x.Id).ToList();
+
                         //Prepare sellerMessage
                         sendMessage.Message = Utils.PrepareSellerMessage(sellerMessage.Message, order);
                         await meliService.SendMessageToBuyerAsync(sendMessage);

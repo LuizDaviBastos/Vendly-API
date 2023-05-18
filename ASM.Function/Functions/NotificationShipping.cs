@@ -43,7 +43,7 @@ namespace ASM.Core.Function.Functions
             //TODO - https://developers.mercadolivre.com.br/pt_br/aplicativos#Usu%C3%A1rios-que-outorgaram-licen%C3%A7as-a-seu-aplicativo
             if (!notification.OrderIdIsValid)
             {
-                var message = $"Error to get OrderId (OrderId is: {notification.OrderId})";
+                var message = $"Error to get OrderId (OrderId is: {notification.TopicId})";
                 log.LogError(message);
                 throw new System.Exception(message);
             }
@@ -51,7 +51,7 @@ namespace ASM.Core.Function.Functions
             var sendMessage = new SendMessage
             {
                 MeliSellerId = notification.user_id,
-                PackId = notification.OrderId, //important to send message to buyer
+                PackId = notification.TopicId, //important to send message to buyer
                 Message = sellerMessage.Message
             };
 
