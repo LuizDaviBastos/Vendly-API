@@ -3,7 +3,7 @@
     public enum MessageType
     {
         AfterSeller,
-        Sent,
+        Shipping,
         Delivered
     }
 }

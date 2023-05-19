@@ -1,3 +1,4 @@
+using ASM.Data.Entities;
 using ASM.Data.Enums;
 using ASM.Data.Interfaces;
 using ASM.Services.Helpers;
@@ -41,18 +42,18 @@ namespace ASM.Core.Function.Functions
             //Can send after seller messages
             
             var sellerMessage = await sellerService.GetMessageByMeliSellerId(notification.user_id, MessageType.AfterSeller);
-            if (!(sellerMessage?.Activated ?? false)) return;
+            Guid sellerId = sellerMessage.MeliAccount.SellerId.Value;
+            SellerOrder sellerOrder = await sellerService.GetSellerOrder(sellerId, notification.TopicId, MessageType.AfterSeller);
+            
+            if (!(sellerMessage?.Activated ?? false) || sellerOrder.AfterSellerMessageStatus == true) return;
 
             //TODO - https://developers.mercadolivre.com.br/pt_br/aplicativos#Usu%C3%A1rios-que-outorgaram-licen%C3%A7as-a-seu-aplicativo
-            if (!notification.OrderIdIsValid)
+            if (!notification.TopicIdIsValid)
             {
                 var message = $"Error to get OrderId (OrderId is: {notification.TopicId})";
                 log.LogError(message);
                 throw new System.Exception(message);
             }
-
-            var order2 = await meliService.GetOrderDetailsAsync(notification);
-
 
 
             var sendMessage = new SendMessage
@@ -62,29 +63,28 @@ namespace ASM.Core.Function.Functions
                 Message = sellerMessage.Message
             };
 
-            var isFirstSellerMessage = await meliService.IsFirstSellerMessage(sendMessage);
-            if (isFirstSellerMessage)
+            var order = await meliService.GetOrderDetailsAsync(notification);
+            if (order.Success ?? false)
             {
-                var order = await meliService.GetOrderDetailsAsync(notification);
-                if (order.Success ?? false)
+                sendMessage.BuyerId = order.buyer.id;
+                if (!string.IsNullOrEmpty(sellerMessage?.Message))
                 {
-                    sendMessage.BuyerId = order.buyer.id;
-                    if (!string.IsNullOrEmpty(sellerMessage?.Message))
-                    {
-                        Guid sellerId = sellerMessage.MeliAccount.SellerId.Value;
-                        var result = await meliService.SaveAttachments(sellerId, sellerMessage);
-                        if (result.Any()) sendMessage.Attachments = result.Select(x => x.Id).ToList();
+                    var result = await meliService.SaveAttachments(sellerId, sellerMessage);
+                    if (result.Any()) sendMessage.Attachments = result.Select(x => x.Id).ToList();
 
-                        //Prepare sellerMessage
-                        sendMessage.Message = Utils.PrepareSellerMessage(sellerMessage.Message, order);
-                        await meliService.SendMessageToBuyerAsync(sendMessage);
-                        log.LogInformation($"message sent successfully to BuyerId: {order.buyer.id} | type: AfterSeller");
-                    }
-                    else
-                    {
-                        log.LogInformation($"Message not defined MeliAccountId: {sellerMessage?.MeliAccountId}");
-                    }
+                    //Prepare sellerMessage
+                    sendMessage.Message = Utils.PrepareSellerMessage(sellerMessage.Message, order);
+                    await meliService.SendMessageToBuyerAsync(sendMessage);
+                    await sellerService.SaveOrUpdateOrderMessageStatus(sellerId, notification.TopicId, MessageType.AfterSeller, true);
+                    log.LogInformation($"message sent successfully to BuyerId: {order.buyer.id} | type: AfterSeller");
                 }
+                else
+                {
+                    log.LogInformation($"Message not defined MeliAccountId: {sellerMessage?.MeliAccountId}");
+                }
+            } 
+            else {
+                log.LogInformation($"Error to get order details. MeliAccountId: {sellerMessage?.MeliAccountId}");
             }
         }
 

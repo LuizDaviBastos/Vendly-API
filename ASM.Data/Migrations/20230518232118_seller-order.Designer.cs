@@ -4,6 +4,7 @@ using ASM.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASM.Data.Migrations
 {
     [DbContext(typeof(AsmContext))]
-    partial class AsmContextModelSnapshot : ModelSnapshot
+    [Migration("20230518232118_seller-order")]
+    partial class sellerorder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -196,20 +198,14 @@ namespace ASM.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool?>("AfterSellerMessageStatus")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("DeliveredMessageStatus")
-                        .HasColumnType("bit");
+                    b.Property<int?>("MessageStatus")
+                        .HasColumnType("int");
 
                     b.Property<long>("OrderId")
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("SellerId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool?>("ShippingMessageStatus")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

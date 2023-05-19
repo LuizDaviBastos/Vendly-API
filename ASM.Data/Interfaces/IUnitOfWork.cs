@@ -7,6 +7,7 @@ namespace ASM.Data.Interfaces
         public ISellerRepository SellerRepository { get; }
         public IMeliAccountRepository MeliAccountRepository { get; }
         public IMessageRepository MessageRepository { get; }
+        public ISellerOrderRepository SellerOrderRepository { get; }
 
         public void Commit();
         public Task CommitAsync();

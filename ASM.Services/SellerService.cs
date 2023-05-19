@@ -138,5 +138,61 @@ namespace ASM.Services
             }
             return ("Usuário não encontrado", false);
         }
+
+        public async Task<SellerOrder> SaveOrUpdateOrderMessageStatus(Guid sellerId, long orderId, MessageType type, bool status)
+        {
+            var order = await unitOfWork.SellerOrderRepository.GetQueryable()
+                .Where(x => x.SellerId == sellerId && x.OrderId == orderId).FirstOrDefaultAsync();
+            if(order == null)
+            {
+                order = new SellerOrder
+                {
+                    OrderId = orderId,
+                    SellerId = sellerId
+                };
+                UpdateMessageStatus(order, type, status);
+                unitOfWork.SellerOrderRepository.Add(order);
+            } 
+            else
+            {
+                UpdateMessageStatus(order, type, status);
+                unitOfWork.SellerOrderRepository.Update(order);
+            }
+
+            await unitOfWork.CommitAsync();
+            return order;
+        }
+
+        public async Task<SellerOrder> GetSellerOrder(Guid sellerId, long orderId, MessageType type)
+        {
+            var order = await unitOfWork.SellerOrderRepository.GetQueryable()
+               .Where(x => x.SellerId == sellerId && x.OrderId == orderId).FirstOrDefaultAsync();
+
+            if(order == null)
+            {
+                order = await SaveOrUpdateOrderMessageStatus(sellerId, orderId, type, false);
+            }
+
+            return order;
+        }
+
+        private void UpdateMessageStatus(SellerOrder order, MessageType type, bool status)
+        {
+            switch (type)
+            {
+                case MessageType.AfterSeller:
+                    order.AfterSellerMessageStatus = status;
+                    break;
+                case MessageType.Shipping:
+                    order.ShippingMessageStatus = status;
+                    break;
+                case MessageType.Delivered:
+                    order.DeliveredMessageStatus = status;
+                    break;
+                default:
+                    break;
+            }
+        }
+
     }
 }

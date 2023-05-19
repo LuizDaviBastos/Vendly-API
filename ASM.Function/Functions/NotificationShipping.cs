@@ -1,3 +1,4 @@
+using ASM.Data.Entities;
 using ASM.Data.Enums;
 using ASM.Data.Interfaces;
 using ASM.Services.Helpers;
@@ -6,6 +7,7 @@ using ASM.Services.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,12 +38,14 @@ namespace ASM.Core.Function.Functions
              */
 
             //Can send after seller messages
-            var sellerMessage = await sellerService.GetMessageByMeliSellerId(notification.user_id, MessageType.Sent);
+            var sellerMessage = await sellerService.GetMessageByMeliSellerId(notification.user_id, MessageType.Shipping);
+            Guid sellerId = sellerMessage.MeliAccount.SellerId.Value;
+            SellerOrder sellerOrder = await sellerService.GetSellerOrder(sellerId, notification.TopicId, MessageType.Shipping);
 
-            if (!(sellerMessage?.Activated ?? false)) return;
+            if (!(sellerMessage?.Activated ?? false) || sellerOrder.ShippingMessageStatus == true) return;
 
             //TODO - https://developers.mercadolivre.com.br/pt_br/aplicativos#Usu%C3%A1rios-que-outorgaram-licen%C3%A7as-a-seu-aplicativo
-            if (!notification.OrderIdIsValid)
+            if (!notification.TopicIdIsValid)
             {
                 var message = $"Error to get OrderId (OrderId is: {notification.TopicId})";
                 log.LogError(message);
@@ -62,6 +66,7 @@ namespace ASM.Core.Function.Functions
                 //Prepare sellerMessage
                 sendMessage.Message = Utils.PrepareSellerMessage(sellerMessage.Message, order);
                 await meliService.SendMessageToBuyerAsync(sendMessage);
+                await sellerService.SaveOrUpdateOrderMessageStatus(sellerId, notification.TopicId, MessageType.Shipping, true);
                 log.LogInformation($"message sent successfully to BuyerId: {order.buyer.id} | type: Sent");
             }
             else

@@ -10,6 +10,7 @@ namespace ASM.Data
         private ISellerRepository sellerRepository;
         private IMeliAccountRepository meliAccountRepository;
         private IMessageRepository messageRepository;
+        private ISellerOrderRepository sellerOrderRepository;
 
         public UnitOfWork(AsmContext asmContext)
         {
@@ -40,6 +41,15 @@ namespace ASM.Data
             {
                 if (messageRepository == null) messageRepository = new MessageRepository(asmContext);
                 return messageRepository;
+            }
+        }
+
+        public ISellerOrderRepository SellerOrderRepository
+        {
+            get
+            {
+                if (sellerOrderRepository == null) sellerOrderRepository = new SellerOrderRepository(asmContext);
+                return sellerOrderRepository;
             }
         }
 

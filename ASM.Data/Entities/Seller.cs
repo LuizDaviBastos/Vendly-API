@@ -12,6 +12,7 @@ namespace ASM.Data.Entities
         public string? ConfirmationCode { get; set; }
 
         public virtual PaymentInformation BillingInformation { get; set; }
-        public virtual IList<MeliAccount> MeliAccounts { get; set; }   
+        public virtual IList<MeliAccount> MeliAccounts { get; set; }
+        public virtual IList<SellerOrder> Orders { get; set; }
     }
 }

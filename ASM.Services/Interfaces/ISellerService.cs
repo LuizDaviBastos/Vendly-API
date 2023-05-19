@@ -14,5 +14,7 @@ namespace ASM.Services.Interfaces
         Task<bool> HasMeliAccount(Guid sellerId);
         Task<(string, bool)> ConfirmEmailAsync(Guid sellerId, string code);
         Task<(string, bool)> SendEmailConfirmationCode(Guid sellerId);
+        public Task<SellerOrder> GetSellerOrder(Guid sellerId, long orderId, MessageType type);
+        public Task<SellerOrder> SaveOrUpdateOrderMessageStatus(Guid sellerId, long orderId, MessageType type, bool status);
     }
 }
