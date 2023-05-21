@@ -3,7 +3,6 @@
   "Values": {
     "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=asmadvstorage;AccountKey=mSrob302rA4gBj+Ha4A5oK7PmNUjU7TdqShD90dauJNOjjZEzhWAao7c8jwSWqBD3ZcuCTmiGKnV+AStBxErEw==;BlobEndpoint=https://asmadvstorage.blob.core.windows.net/;QueueEndpoint=https://asmadvstorage.queue.core.windows.net/;TableEndpoint=https://asmadvstorage.table.core.windows.net/;FileEndpoint=https://asmadvstorage.file.core.windows.net/;",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-
     "Invironment": "TEST",
     "ConnectionStrings:AsmConnection": "Data Source=mssql2017.hostingzone.com.br;Initial Catalog=asmapp;User ID=manager;Password=qoe83i92;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False",
     "SecretKey": "fEYWEH27nipi1mzmPGC1mKdbuMmAFVtU",
