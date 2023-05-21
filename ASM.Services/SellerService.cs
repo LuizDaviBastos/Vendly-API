@@ -5,8 +5,6 @@ using ASM.Services.Helpers;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Microsoft.EntityFrameworkCore;
-using MongoDB.Driver.Core.Servers;
-using System.Security.Cryptography.X509Certificates;
 
 namespace ASM.Services
 {
@@ -139,20 +137,42 @@ namespace ASM.Services
             return ("Usuário não encontrado", false);
         }
 
-        public async Task<SellerOrder> SaveOrUpdateOrderMessageStatus(Guid sellerId, long orderId, MessageType type, bool status)
+        public async Task<SellerOrder> GetSellerOrder(Guid sellerId, long meliSellerId, long orderId, MessageType type)
         {
             var order = await unitOfWork.SellerOrderRepository.GetQueryable()
-                .Where(x => x.SellerId == sellerId && x.OrderId == orderId).FirstOrDefaultAsync();
+               .Where(x => x.MeliSellerId == meliSellerId && x.OrderId == orderId).FirstOrDefaultAsync();
+
             if(order == null)
+            {
+                order = await SaveOrUpdateOrderMessageStatus(sellerId, meliSellerId, orderId, type, false);
+            }
+
+            return order;
+        }
+
+        public async Task<SellerOrder?> GetSellerOrder(long meliSellerId, long orderId, MessageType type)
+        {
+            SellerOrder? order = await unitOfWork.SellerOrderRepository.GetQueryable()
+               .Where(x => x.MeliSellerId == meliSellerId && x.OrderId == orderId).FirstOrDefaultAsync();
+
+            return order;
+        }
+
+        public async Task<SellerOrder> SaveOrUpdateOrderMessageStatus(Guid sellerId, long meliSellerId, long orderId, MessageType type, bool status)
+        {
+            var order = await unitOfWork.SellerOrderRepository.GetQueryable()
+                .Where(x => x.MeliSellerId == meliSellerId && x.OrderId == orderId).FirstOrDefaultAsync();
+            if (order == null)
             {
                 order = new SellerOrder
                 {
                     OrderId = orderId,
+                    MeliSellerId = meliSellerId,
                     SellerId = sellerId
                 };
                 UpdateMessageStatus(order, type, status);
                 unitOfWork.SellerOrderRepository.Add(order);
-            } 
+            }
             else
             {
                 UpdateMessageStatus(order, type, status);
@@ -160,19 +180,6 @@ namespace ASM.Services
             }
 
             await unitOfWork.CommitAsync();
-            return order;
-        }
-
-        public async Task<SellerOrder> GetSellerOrder(Guid sellerId, long orderId, MessageType type)
-        {
-            var order = await unitOfWork.SellerOrderRepository.GetQueryable()
-               .Where(x => x.SellerId == sellerId && x.OrderId == orderId).FirstOrDefaultAsync();
-
-            if(order == null)
-            {
-                order = await SaveOrUpdateOrderMessageStatus(sellerId, orderId, type, false);
-            }
-
             return order;
         }
 
@@ -193,6 +200,5 @@ namespace ASM.Services
                     break;
             }
         }
-
     }
 }

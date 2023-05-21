@@ -18,6 +18,9 @@ namespace ASM.Services
         private readonly ISellerService sellerService;
         private readonly IStorageService storageService;
 
+        private bool NeedRefreshToken(IRestResponse result) => result.StatusCode == HttpStatusCode.Forbidden || 
+            result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized;
+
         public MeliService(IUnitOfWork unitOfWork, AsmConfiguration asmConfiguration, ISellerService sellerService, IStorageService storageService)
         {
             restClient = new RestClient("https://api.mercadolibre.com");
@@ -71,7 +74,7 @@ namespace ASM.Services
             var order = new Order();
             order.Success = false;
 
-            if (!SetAccessToken(notification.user_id, out MeliAccount? meliAccount))
+            if (!SetAccessToken(notification.user_id, out MeliAccount meliAccount))
             {
                 order.Message = "Seller not found";
                 return order;
@@ -86,9 +89,9 @@ namespace ASM.Services
                 order = result.Data;
                 order.Success = true;
             }
-            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest)
+            else if (tryAgain && NeedRefreshToken(result))
             {
-                return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetOrderDetailsAsync(notification, false));
+                return await RefreshTokenAndTryAgain(meliAccount.RefreshToken, async () => await GetOrderDetailsAsync(notification, false));
             }
             else
             {
@@ -104,7 +107,7 @@ namespace ASM.Services
             var feedback = new OrderFeedback();
             feedback.Success = false;
 
-            if (!SetAccessToken(notification.user_id, out MeliAccount? meliAccount))
+            if (!SetAccessToken(notification.user_id, out MeliAccount meliAccount))
             {
                 feedback.Message = "Seller not found";
                 return feedback;
@@ -118,7 +121,7 @@ namespace ASM.Services
                 feedback = result.Data;
                 feedback.Success = true;
             }
-            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest)
+            else if (tryAgain && NeedRefreshToken(result))
             {
                 return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetFeedbackDetailsAsync(notification, false));
             }
@@ -131,9 +134,43 @@ namespace ASM.Services
             return feedback;
         }
 
-        public async Task<bool> SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgain = true)
+        public async Task<ShipmentResponse> GetShipmentDetails(NotificationTrigger notification, bool tryAgain = true)
         {
-            if (!SetAccessToken(sendMessage.MeliSellerId, out MeliAccount? meliAccount)) return false;
+            var shipment = new ShipmentResponse();
+            shipment.Success = false;
+
+            if (!SetAccessToken(notification.user_id, out MeliAccount meliAccount))
+            {
+                shipment.Message = "Seller not found";
+                return shipment;
+            }
+
+            RestRequest request = new RestRequest($"/shipments/{notification.TopicId}", Method.GET);
+            request.AddHeader("Authorization", $"Bearer {accessToken}");
+            request.AddParameter("x-format-new", "true");
+
+            var result = await restClient.ExecuteAsync<ShipmentResponse>(request);
+            if (result.IsSuccessful)
+            {
+                shipment = result.Data;
+                shipment.Success = true;
+            }
+            else if (tryAgain && NeedRefreshToken(result))
+            {
+                await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetShipmentDetails(notification, false));
+            }
+            else
+            {
+                shipment.Success = false;
+                shipment.Message = result.Content;
+            }
+
+            return shipment;
+        }
+
+        public async Task<(bool, string)> SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgain = true)
+        {
+            if (!SetAccessToken(sendMessage.MeliSellerId, out MeliAccount meliAccount)) return (false, $"Erro ao obter MeliAccount. MeliSellerId: {sendMessage.MeliSellerId}");
 
             if (!(sendMessage.Attachments?.Any() ?? false)) sendMessage.Attachments = null;
 
@@ -147,14 +184,14 @@ namespace ASM.Services
             var result = await restClient.ExecuteAsync(request);
             if (result.IsSuccessful)
             {
-                return true;
+                return (true, string.Empty);
             }
-            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest)
+            else if (tryAgain && NeedRefreshToken(result))
             {
                 return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await SendMessageToBuyerAsync(sendMessage, false));
             }
 
-            return false;
+            return (true, result.Content);
         }
 
         public async Task<bool> IsFirstSellerMessage(SendMessage sendMessage, bool tryAgain = true)
@@ -170,7 +207,7 @@ namespace ASM.Services
             {
                 return !result.Data.messages.Any(x => x.from.user_id == sendMessage.MeliSellerId);
             }
-            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
+            else if (tryAgain && NeedRefreshToken(result))
             {
                 return await RefreshTokenAndTryAgain(meliAccount.RefreshToken, async () => await IsFirstSellerMessage(sendMessage, false));
             }
@@ -191,7 +228,7 @@ namespace ASM.Services
                 result.Data.Success = true;
                 return result.Data;
             }
-            else if (tryAgain && result.StatusCode == HttpStatusCode.Forbidden || result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized)
+            else if (tryAgain && NeedRefreshToken(result))
             {
                 return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetMeliSellerInfo(meliSellerId, false));
             }
@@ -263,7 +300,7 @@ namespace ASM.Services
             return accessToken;
         }
 
-        private bool SetAccessToken(long meliSellerId, out MeliAccount? meliAccount)
+        private bool SetAccessToken(long meliSellerId, out MeliAccount meliAccount)
         {
             meliAccount = unitOfWork.MeliAccountRepository.GetByMeliSellerId(meliSellerId);
 

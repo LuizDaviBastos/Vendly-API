@@ -9,23 +9,18 @@ namespace ASM.Api.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly IStorageService storageService;
+        private readonly IMeliService meliService;
 
-        public NotificationController(IStorageService storageService)
+        public NotificationController(IStorageService storageService, IMeliService meliService)
         {
             this.storageService = storageService;
+            this.meliService = meliService;
         }
 
         [HttpPost("NotificationTrigger")]
         public async Task<IActionResult> NotificationTrigger([FromBody]NotificationTrigger notification)
         {
-            if (notification.IsOrderV2)
-            {
-                await storageService.SendMessageAsync("process-order-notification", notification);
-            } 
-            else if(notification.IsFeedback)
-            {
-                await storageService.SendMessageAsync("process-delivered-notification", notification);
-            }
+            await storageService.SendMessageAsync("pre-process-notifications", notification);
             return Ok();
         }
     }

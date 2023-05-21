@@ -7,6 +7,8 @@ namespace ASM.Data.Entities
     {
         public Guid Id { get; set; }
         public long OrderId { get; set; }
+
+        public long? MeliSellerId { get; set; }
         public bool? AfterSellerMessageStatus { get; set; }
         public bool? ShippingMessageStatus { get; set; }
         public bool? DeliveredMessageStatus { get; set; }

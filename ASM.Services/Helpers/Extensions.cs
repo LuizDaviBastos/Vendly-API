@@ -16,6 +16,7 @@ namespace ASM.Services.Helpers
     {
         public static IServiceCollection AddAsmServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddScoped<ISettingsService, SettingsService>();
             services.AddScoped<IStorageService, StorageService>();
             services.AddScoped<IMeliService, MeliService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();

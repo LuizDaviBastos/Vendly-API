@@ -28,5 +28,6 @@
         public bool IsOrderV2 { get => topic == "orders_v2"; }
         public bool IsFeedback { get => topic == "orders_feedback"; }
         public bool TopicIdIsValid { get => this.TopicId != 0; }
+        public bool IsShipping { get => topic == "shipments"; }
     }
 }
