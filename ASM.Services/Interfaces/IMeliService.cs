@@ -14,5 +14,7 @@ namespace ASM.Services.Interfaces
         public Task<IList<SaveAttachmentResponse>> SaveAttachments(Guid sellerId, SellerMessage sellerMessage);
         public Task<OrderFeedback> GetFeedbackDetailsAsync(NotificationTrigger notification, bool tryAgain = true);
         public Task<ShipmentResponse> GetShipmentDetails(NotificationTrigger notification, bool tryAgain = true);
+        public Task<Dictionary<bool, (MeliAccount, string)>> RevokeMeliAccounts(IEnumerable<MeliAccount> meliAccounts, bool tryAgain = true);
+        public Task<(bool, (MeliAccount, string))> RevokeMeliAccount(MeliAccount meli, bool tryAgain = true);
     }
 }

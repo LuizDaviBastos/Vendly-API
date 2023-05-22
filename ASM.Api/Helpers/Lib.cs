@@ -1,15 +1,19 @@
 ﻿using ASM.Services.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RestSharp.Extensions;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace ASM.Api.Helpers
 {
-    public class Uteis
+    public static class Uteis
     {
         public static bool IsAuthenticated(string token, AsmConfiguration asmConfiguration)
         {
@@ -73,6 +77,16 @@ namespace ASM.Api.Helpers
         public static string GetFirstName(string fullName)
         {
             return fullName?.Split(" ")?[0] ?? "";
+        }
+
+        public static string GetErrors(this IEnumerable<IdentityError> erros)
+        {
+            string output = string.Empty;
+            foreach (var error in erros)
+            {
+                output += $"{error.Description} \n";
+            }
+            return output;
         }
     }
 }

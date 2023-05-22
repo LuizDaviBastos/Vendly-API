@@ -20,7 +20,7 @@ namespace ASM.Data
 
         public AsmContext(DbContextOptions options) : base(options)
         {
-            
+
         }
 
         public static void Migrate(string connectionString)
@@ -28,7 +28,7 @@ namespace ASM.Data
             var context = new AsmContext(connectionString);
             context.Database.Migrate();
         }
-        
+
 
         public virtual DbSet<Seller> Sellers { get; set; }
         public virtual DbSet<SellerMessage> SellerMessages { get; set; }
@@ -36,6 +36,42 @@ namespace ASM.Data
         public virtual DbSet<MeliAccount> MeliAccounts { get; set; }
         public virtual DbSet<Attachment> Attachments { get; set; }
 
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Seller>()
+            .HasMany(e => e.MeliAccounts)
+            .WithOne(e => e.Seller)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Seller>()
+            .HasMany(e => e.Orders)
+            .WithOne(e => e.Seller)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Seller>()
+            .HasOne(e => e.BillingInformation)
+            .WithOne(e => e.Seller)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Seller>()
+           .HasOne(e => e.BillingInformation)
+           .WithOne(e => e.Seller)
+           .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<MeliAccount>()
+            .HasMany(e => e.Messages)
+            .WithOne(e => e.MeliAccount)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SellerMessage>()
+            .HasMany(e => e.Attachments)
+            .WithOne(e => e.Message)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+            base.OnModelCreating(modelBuilder);
+        }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)

@@ -71,12 +71,7 @@ namespace ASM.Api.Controllers
                     return Ok(RequestResponse.GetSuccess(loginResponse));
                 }
 
-                string errors = string.Empty;
-                foreach (var error in createResult.Errors)
-                {
-                    errors += $"{error.Description} \n";
-                }
-
+                string errors = createResult.Errors.GetErrors();
                 return BadRequest(RequestResponse.GetError(errors));
             }
             catch (Exception ex)

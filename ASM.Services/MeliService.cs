@@ -4,6 +4,7 @@ using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Newtonsoft.Json;
 using RestSharp;
+using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
@@ -18,7 +19,7 @@ namespace ASM.Services
         private readonly ISellerService sellerService;
         private readonly IStorageService storageService;
 
-        private bool NeedRefreshToken(IRestResponse result) => result.StatusCode == HttpStatusCode.Forbidden || 
+        private bool NeedRefreshToken(IRestResponse result) => result.StatusCode == HttpStatusCode.Forbidden ||
             result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized;
 
         public MeliService(IUnitOfWork unitOfWork, AsmConfiguration asmConfiguration, ISellerService sellerService, IStorageService storageService)
@@ -177,7 +178,7 @@ namespace ASM.Services
             RestRequest request = new RestRequest($"/messages/packs/{sendMessage.PackId}/sellers/{sendMessage.MeliSellerId}", Method.POST);
             request.AddHeader("Authorization", $"Bearer {this.accessToken}");
             request.AddQueryParameter("tag", "post_sale");
-            
+
             var body = new SendMessageRequest(sendMessage.MeliSellerId, sendMessage.BuyerId, sendMessage.Message, sendMessage.Attachments);
             request.AddJsonBody(body);
 
@@ -308,6 +309,43 @@ namespace ASM.Services
 
             this.accessToken = meliAccount.AccessToken;
             return true;
+        }
+
+        public async Task<(bool, (MeliAccount, string))> RevokeMeliAccount(MeliAccount meli, bool tryAgain = true)
+        {
+            if (!SetAccessToken(meli.MeliSellerId, out MeliAccount? meliAccount)) throw new Exception($"SetAccessToken Error{(meliAccount == null || meliAccount?.Id == Guid.Empty ? ". Seller not found" : "")}");
+
+            RestRequest restRequest = new RestRequest($"/users/{meli.MeliSellerId}/applications/{asmConfiguration.AppId}", Method.DELETE);
+            restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}");
+
+            //var result1 = await restClient.ExecuteAsync(restRequest);
+            var result = await restClient.ExecuteAsync<RevokeResponse>(restRequest);
+            if (result.IsSuccessful)
+            {
+                return (true, (meliAccount, ""));
+            }
+            else if (tryAgain && NeedRefreshToken(result))
+            {
+                return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await RevokeMeliAccount(meli, false));
+            }
+
+            return (false, (meliAccount, result.Data.msg));
+        }
+
+        public async Task<Dictionary<bool, (MeliAccount, string)>> RevokeMeliAccounts(IEnumerable<MeliAccount> meliAccounts, bool tryAgain = true)
+        {
+            Dictionary<bool, (MeliAccount, string)> status = new();
+
+            if (meliAccounts?.Any() ?? false)
+            {
+                foreach (var meli in meliAccounts)
+                {
+                    var result = await this.RevokeMeliAccount(meli, tryAgain);
+                    status.Add(result.Item1, result.Item2);
+                }
+            }
+
+            return status;
         }
     }
 

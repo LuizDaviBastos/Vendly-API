@@ -200,5 +200,11 @@ namespace ASM.Services
                     break;
             }
         }
+
+        public async Task DeleteAccount(Seller user)
+        {
+            unitOfWork.SellerRepository.Delete(user.Id);
+            await unitOfWork.CommitAsync();
+        }
     }
 }

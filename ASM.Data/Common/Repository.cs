@@ -1,6 +1,5 @@
 ﻿using ASM.Core.Interfaces;
 using ASM.Data.Entities;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
