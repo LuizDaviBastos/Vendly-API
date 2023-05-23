@@ -4,19 +4,16 @@ using ASM.Data.Entities;
 using ASM.Data.Interfaces;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using MongoDB.Driver.Core.Servers;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using static ASM.Services.Models.MessagesResponse;
 
 namespace ASM.Api.Controllers
 {
@@ -43,11 +40,12 @@ namespace ASM.Api.Controllers
         }
 
         [HttpGet("GetAuthUrl")]
-        public IActionResult GetAuthUrl(string countryId)
+        public async Task<IActionResult> GetAuthUrl(string countryId)
         {
             if (string.IsNullOrEmpty(countryId) || !asmConfiguration.Countries.ContainsKey(countryId.ToUpper())) return BadRequest("invalid country");
 
-            return Ok(RequestResponse.GetSuccess(meliService.GetAuthUrl(countryId, null), "success"));
+            string authUrl = await meliService.GetAuthUrl(countryId, null);
+            return Ok(RequestResponse.GetSuccess(authUrl, string.Empty));
         }
 
         [HttpPost("SaveAccount")]
@@ -58,8 +56,8 @@ namespace ASM.Api.Controllers
                 var entity = new Seller
                 {
                     Email = account.Email,
-                    FirstName = Uteis.GetFirstName(account.FullName),
-                    FullName = account.FullName,
+                    FirstName = account.FirstName,
+                    LastName = account.LastName,
                     UserName = account.Email,
                     Country = account.Country
                 };
@@ -156,13 +154,13 @@ namespace ASM.Api.Controllers
 
         //call to sync meli account
         [HttpGet("SyncMeli")]
-        public IActionResult SyncMeli(string countryId, string token, bool signup)
+        public async Task<IActionResult> SyncMeli(string countryId, string token, bool signup)
         {
             try
             {
                 if (Uteis.TryGetUserId(token, out Guid sellerId))
                 {
-                    var url = this.meliService.GetAuthUrl(countryId, new() { SellerId = sellerId, Signup = signup });
+                    var url = await meliService.GetAuthUrl(countryId, new() { SellerId = sellerId, Signup = signup });
                     return Redirect(url);
                 }
 
@@ -190,7 +188,7 @@ namespace ASM.Api.Controllers
                         {
                             if(stateOut.Signup)
                             {
-                                return Redirect($"asm.app://auth/signup?step=5");
+                                return Redirect($"asm.app://auth/signup?step=5&sync=true");
                             }
                             else
                             {
@@ -198,8 +196,9 @@ namespace ASM.Api.Controllers
                             }
                             
                         }
-
-                        return BadRequest(RequestResponse.GetError(addResult.Item1)); //TODO redirect to Error Razor Page
+                        string path = $"auth/signup?step=5&sync=false&error=true&message={System.Net.WebUtility.UrlEncode(addResult.Item1)}";
+                        return Redirect($"asm.app://{path}");
+                        //return BadRequest(RequestResponse.GetError(addResult.Item1)); //TODO redirect to Error Razor Page
                     }
 
                     return BadRequest(RequestResponse.GetError(accessToken.Message));
@@ -209,9 +208,8 @@ namespace ASM.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest();
             }
-
         }
 
         [HttpGet("AuthSignup")]

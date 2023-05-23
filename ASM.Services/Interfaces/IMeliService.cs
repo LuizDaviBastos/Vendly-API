@@ -5,7 +5,7 @@ namespace ASM.Services.Interfaces
 {
     public interface IMeliService
     {
-        public string GetAuthUrl(string countryId, StateUrl state);
+        public Task<string> GetAuthUrl(string countryId, StateUrl? state);
         public Task<AccessToken> GetAccessTokenAsync(string code);
         public Task<Order> GetOrderDetailsAsync(NotificationTrigger notification, bool tryAgain = true);
         public Task<(bool, string)> SendMessageToBuyerAsync(SendMessage sendMessage, bool tryAgain = true);

@@ -1,5 +1,6 @@
 ﻿using ASM.Services.Models;
 using HtmlAgilityPack;
+using System.Text.RegularExpressions;
 
 namespace ASM.Services.Helpers
 {
@@ -13,6 +14,11 @@ namespace ASM.Services.Helpers
             message = SetMentionValue(message, "mention-COMPRADOR", buyerName);
             message = SetMentionValue(message, "mention-PRODUTO", productTitle);
             message = SetMentionValue(message, "mention-RASTREIO", productTitle);
+
+            message = ReplaceWordIgnoreCaseRegex(message, "comprador", buyerName);
+            message = ReplaceWordIgnoreCaseRegex(message, "produto", productTitle);
+            message = ReplaceWordIgnoreCaseRegex(message, "rastreio", productTitle);
+
             return message;
         }
 
@@ -32,6 +38,13 @@ namespace ASM.Services.Helpers
             }
 
             return html;
+        }
+
+        private static string ReplaceWordIgnoreCaseRegex(string input, string flag, string? value)
+        {
+            string pattern = $@"@((?i){flag})\b";
+            string replacedText = Regex.Replace(input, pattern, value ?? "");
+            return replacedText;
         }
     }
 }

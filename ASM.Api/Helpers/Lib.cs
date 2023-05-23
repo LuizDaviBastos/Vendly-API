@@ -82,7 +82,7 @@ namespace ASM.Api.Helpers
         public static string GetErrors(this IEnumerable<IdentityError> erros)
         {
             string output = string.Empty;
-            foreach (var error in erros)
+            foreach (var error in erros.Where(x => x.Code != "DuplicateUserName"))
             {
                 output += $"{error.Description} \n";
             }

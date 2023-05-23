@@ -4,7 +4,6 @@ using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Newtonsoft.Json;
 using RestSharp;
-using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
@@ -18,30 +17,35 @@ namespace ASM.Services
         private readonly AsmConfiguration asmConfiguration;
         private readonly ISellerService sellerService;
         private readonly IStorageService storageService;
+        private readonly ISettingsService settingsService;
 
         private bool NeedRefreshToken(IRestResponse result) => result.StatusCode == HttpStatusCode.Forbidden ||
             result.StatusCode == HttpStatusCode.BadRequest || result.StatusCode == HttpStatusCode.Unauthorized;
 
-        public MeliService(IUnitOfWork unitOfWork, AsmConfiguration asmConfiguration, ISellerService sellerService, IStorageService storageService)
+        public MeliService(IUnitOfWork unitOfWork, AsmConfiguration asmConfiguration, ISellerService sellerService, IStorageService storageService, ISettingsService settingsService)
         {
             restClient = new RestClient("https://api.mercadolibre.com");
             this.unitOfWork = unitOfWork;
             this.asmConfiguration = asmConfiguration;
             this.sellerService = sellerService;
             this.storageService = storageService;
+            this.settingsService = settingsService; 
         }
 
-        public string GetAuthUrl(string countryId, StateUrl? state)
+        public async Task<string> GetAuthUrl(string countryId, StateUrl? state)
         {
+            var settings = await this.settingsService.GetAppSettings();
+            string? redirectUrl = settings.RedirectUrl ?? asmConfiguration.RedirectUrl;
             string stateBase64 = string.Empty;
             if (state != null) stateBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(state)));
 
-            var authUrl = $"{{0}}/authorization?response_type=code&client_id={asmConfiguration.AppId}&redirect_uri={asmConfiguration.RedirectUrl}&state={stateBase64}";
+            var authUrl = $"{{0}}/authorization?response_type=code&client_id={asmConfiguration.AppId}&redirect_uri={redirectUrl}&state={stateBase64}";
             return string.Format(authUrl, asmConfiguration.Countries?[countryId.ToUpper()]);
         }
 
         public async Task<AccessToken> GetAccessTokenAsync(string code)
         {
+            var settings = await this.settingsService.GetAppSettings();
             AccessToken accessToken = new AccessToken();
             accessToken.Success = false;
 
@@ -52,7 +56,7 @@ namespace ASM.Services
                 client_id = asmConfiguration.AppId,
                 client_secret = asmConfiguration.SecretKey,
                 code = code,
-                redirect_uri = asmConfiguration.RedirectUrl
+                redirect_uri = settings.RedirectUrl ?? asmConfiguration.RedirectUrl
             });
 
             var result = await restClient.ExecuteAsync<AccessToken>(request);
@@ -226,6 +230,8 @@ namespace ASM.Services
             var result = await restClient.ExecuteAsync<SellerInfo>(restRequest);
             if (result.IsSuccessful)
             {
+                var sellerItems = await GetSellerItems(meliSellerId);
+                result.Data.ProdutosCount = sellerItems?.paging?.total ?? 0;
                 result.Data.Success = true;
                 return result.Data;
             }
@@ -261,6 +267,26 @@ namespace ASM.Services
             }
 
             return response;
+        }
+
+        private async Task<SellerItems?> GetSellerItems(long meliSellerId, bool tryAgain = true)
+        {
+           if (!SetAccessToken(meliSellerId, out MeliAccount? meliAccount)) throw new Exception($"SetAccessToken Error{(meliAccount == null || meliAccount?.Id == Guid.Empty ? ". Seller not found" : "")}");
+
+            RestRequest restRequest = new RestRequest($"/sites/MLB/search?seller_id={meliSellerId}", Method.GET);
+            restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}");
+
+            var result = await restClient.ExecuteAsync<SellerItems>(restRequest);
+            if (result.IsSuccessful)
+            {
+                result.Data.Success = true;
+                return result.Data;
+            }
+            else if (tryAgain && NeedRefreshToken(result))
+            {
+                return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetSellerItems(meliSellerId, false));
+            }
+            return null;
         }
 
         private async Task<TResult> RefreshTokenAndTryAgain<TResult>(string refreshToken, Func<Task<TResult>> func)

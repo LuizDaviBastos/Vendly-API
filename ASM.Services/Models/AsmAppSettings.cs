@@ -1,14 +1,17 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using Google.Cloud.Firestore;
 
 namespace ASM.Services.Models
 {
-    public class AsmAppSettings
+    [FirestoreData]
+    public class AsmAppSettings 
     {
-        [BsonId]
-        [BsonElement("Id")]
-        public string Id { get; set; }
+        [FirestoreProperty(Name = "urlBaseApi")]
+        public string? UrlBaseApi { get; set; }
 
-        [BsonElement("Endpoint")]
-        public string? Endpoint { get; set; }
+        [FirestoreProperty(Name = "createAccountMeliUrl")]
+        public string? CreateAccountMeliUrl { get; set; }
+
+        [FirestoreProperty(Name = "redirectUrl")]
+        public string? RedirectUrl { get; set; }
     }
 }

@@ -20,16 +20,19 @@ namespace ASM.Api.Controllers
         private readonly ISellerService sellerService;
         private readonly IUnitOfWork uow;
         private readonly UserManager<Seller> userManager;
+        private readonly ISettingsService setingsService;
 
         public SettingsController(IMeliService meliService,
               ISellerService sellerService,
               UserManager<Seller> userManager,
-              IUnitOfWork uow)
+              IUnitOfWork uow,
+              ISettingsService setingsService)
         {
             this.meliService = meliService;
             this.sellerService = sellerService;
             this.userManager = userManager;
             this.uow = uow;
+            this.setingsService = setingsService;
         }
 
         [HttpPost("ChangePassword")]
@@ -71,6 +74,22 @@ namespace ASM.Api.Controllers
                 return BadRequest(RequestResponse.GetError("Houve um erro ao tentar deletar sua conta."));
             }
             
+        }
+
+        [AllowAnonymous]
+        [HttpGet("Test")]
+        public async Task<IActionResult> Test()
+        {
+            try
+            {
+                var result = await this.setingsService.GetAppSettings();
+                return Ok(result);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(RequestResponse.GetError(ex.Message));
+            }
+
         }
     }
 }

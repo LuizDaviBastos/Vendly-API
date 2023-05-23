@@ -23,6 +23,7 @@
         public string seller_experience { get; set; }
         public SellerReputation seller_reputation { get; set; }
         public Thumbnail thumbnail { get; set; }
+        public long ProdutosCount { get; set; }
     }
 
     public class Identification

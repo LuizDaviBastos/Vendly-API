@@ -1,27 +1,31 @@
 ﻿using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using Google.Cloud.Firestore;
 using MongoDB.Driver;
 
 namespace ASM.Services
 {
     public class SettingsService : ISettingsService
     {
-        private readonly IMongoCollection<AsmAppSettings> collection;
+        private readonly FirestoreDb fireStore;
 
-        public SettingsService(IMongoDatabase mongoDatabase)
+        public SettingsService(FirestoreDb firebaseClient)
         {
-            collection = mongoDatabase.GetCollection<AsmAppSettings>("AppSettings");
+            this.fireStore = firebaseClient;
         }
 
-        public AsmAppSettings GetAppSettings()
+        public async Task<AsmAppSettings> GetAppSettings()
         {
-            return collection.Find(x => true).First();
+            AsmAppSettings response = new();
+            var querySnapshot = await fireStore.Collection("settings").GetSnapshotAsync();
+            var snapshot = querySnapshot.FirstOrDefault();
+            if(snapshot != null) 
+            {
+                response = snapshot.ConvertTo<AsmAppSettings>();
+            }
+
+            return response;
         }
 
-        public AsmAppSettings SetAppSettings(AsmAppSettings settings)
-        {
-            collection.ReplaceOne(x => x.Id == settings.Id, settings);
-            return settings;
-        }
     }
 }
