@@ -9,6 +9,7 @@
         public DateTime? sent { get; set; }
         public int attempts { get; set; }
         public DateTime? received { get; set; }
+        public string? trackingNumber{ get; set; }
 
         public long TopicId 
         { 
@@ -16,9 +17,9 @@
             {
                 if (!string.IsNullOrEmpty(resource) && resource.Contains("/") && resource.Split("/").Length >= 3)
                 {
-                    if(long.TryParse(resource.Split("/")[2], out long orderId))
+                    if(long.TryParse(resource.Split("/")[2], out long topicId))
                     {
-                        return orderId;
+                        return topicId;
                     }
                 }
                 return 0;
@@ -29,5 +30,6 @@
         public bool IsFeedback { get => topic == "orders_feedback"; }
         public bool TopicIdIsValid { get => this.TopicId != 0; }
         public bool IsShipping { get => topic == "shipments"; }
+        public string OrderId { get; set; }
     }
 }

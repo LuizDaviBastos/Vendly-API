@@ -5,8 +5,10 @@ using ASM.Data.Enums;
 using ASM.Services;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using ASM.Services.Models.Constants;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace ASM.PreFunction
 {
@@ -28,6 +30,7 @@ namespace ASM.PreFunction
         {
             if(notification.IsOrderV2)
             {
+                notification.OrderId = notification.TopicId.ToString();
                 var sellerOrder = await sellerService.GetSellerOrder(notification.user_id, notification.TopicId, MessageType.AfterSeller);
                 if (sellerOrder?.AfterSellerMessageStatus == true) return;
 
@@ -36,10 +39,12 @@ namespace ASM.PreFunction
             else if (notification.IsShipping)
             {
                 var shipping = await meliService.GetShipmentDetails(notification);
-                bool sent = (shipping.status == "ready_to_ship" && shipping.substatus == "in_hub") || (shipping.status == "shipped");
-                bool delivered = shipping.status == "delivered";
+                bool sent = (shipping.status == ShipmentStatus.ReadyToShip && shipping.substatus == ShipmentSubStatus.InHub) || (shipping.status == ShipmentStatus.Shipped);
+                bool delivered = shipping.status == ShipmentStatus.Delivered;
                 if (sent)
                 {
+                    notification.OrderId = shipping.order_id;
+                    notification.trackingNumber = shipping.tracking_number;
                     await storageService.SendMessageAsync("process-shipping-notification", notification);
                 }
                 else if (delivered)
@@ -50,8 +55,10 @@ namespace ASM.PreFunction
             else if (notification.IsFeedback)
             {
                 var feedback = await meliService.GetFeedbackDetailsAsync(notification);
+                //notification.OrderId = feedback.order_id;
                 if (feedback?.purchase?.fulfilled ?? false)
                 {
+                    notification.OrderId = feedback.purchase.order_id.ToString();
                     await storageService.SendMessageAsync("process-delivered-notification", notification);
                 }
             }

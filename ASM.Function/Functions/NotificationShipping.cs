@@ -23,7 +23,7 @@ namespace ASM.Core.Function.Functions
         [FunctionName("NotificationShipping")]
         public async Task Run([QueueTrigger("process-shipping-notification")] NotificationTrigger notification, ILogger log)
         {
-            
+
             var sellerMessage = await sellerService.GetMessageByMeliSellerId(notification.user_id, MessageType.Shipping);
             SellerOrder sellerOrder = await sellerService.GetSellerOrder(sellerMessage.MeliAccount.SellerId.Value, notification.user_id, notification.TopicId, MessageType.Shipping);
             if (!(sellerMessage?.Activated ?? false) || sellerOrder.ShippingMessageStatus == true) return;

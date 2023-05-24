@@ -107,25 +107,25 @@ namespace ASM.Services
             var entity = unitOfWork.SellerRepository.Get(sellerId);
             if (entity != null)
             {
-                long code = Utils.GetRandomCode();
+                string code = Utils.GetRandomCode().ToString();
                 var settings = await settingsService.GetAppSettings();
 
                 string body, title;
 
                 if (!entity.EmailConfirmed)
                 {
-                    title = "Conclua o cadastro da sua conta";
-                    body = settings.HtmlEmailCodeNewUser.Replace(@"{{codigo}}", code.ToString());
+                    title = "Complete seu cadastro";
+                    body = settings.HtmlEmailCodeNewUser.Replace(@"{{codigo}}", code);
                 }
                 else
                 {
                     title = "Confirme seu email";
-                    body = settings.HtmlEmailCode.Replace(@"{{codigo}}", code.ToString());
+                    body = settings.HtmlEmailCode.Replace(@"{{codigo}}", code);
                 }
 
                 await emailService.SendEmail(entity.Email, body, title);
 
-                entity.ConfirmationCode = code.ToString();
+                entity.ConfirmationCode = code;
                 unitOfWork.SellerRepository.Update(entity);
                 await unitOfWork.CommitAsync();
                 return ("", true);

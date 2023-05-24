@@ -33,7 +33,7 @@ namespace ASM.Function.Services
             var sendMessage = new SendMessage
             {
                 MeliSellerId = notification.user_id,
-                PackId = notification.TopicId, //important to send message to buyer
+                PackId = notification.OrderId, //important to send message to buyer
                 Message = sellerMessage.Message
             };
 
@@ -47,7 +47,7 @@ namespace ASM.Function.Services
                     if (result.Any()) sendMessage.Attachments = result.Select(x => x.Id).ToList();
 
                     //Prepare sellerMessage
-                    sendMessage.Message = Utils.PrepareSellerMessage(sellerMessage.Message, order);
+                    sendMessage.Message = Utils.PrepareSellerMessage(sellerMessage.Message, order, notification);
                     (bool status, string message) = await meliService.SendMessageToBuyerAsync(sendMessage);
                     if (status)
                     {

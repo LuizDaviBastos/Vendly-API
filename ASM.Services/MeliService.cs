@@ -2,6 +2,7 @@
 using ASM.Data.Interfaces;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using ASM.Services.Models.Constants;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Net;
@@ -85,9 +86,8 @@ namespace ASM.Services
                 return order;
             }
 
-            RestRequest request = new RestRequest($"/orders/{notification.TopicId}", Method.GET);
+            RestRequest request = new RestRequest($"/orders/{notification.OrderId}", Method.GET);
             request.AddHeader("Authorization", $"Bearer {accessToken}");
-            var result2 = await restClient.ExecuteAsync(request);
             var result = await restClient.ExecuteAsync<Order>(request);
             if (result.IsSuccessful)
             {
@@ -139,6 +139,40 @@ namespace ASM.Services
             return feedback;
         }
 
+        public async Task<ShipmentResponseByOrder> GetShipmentDetailsByOrder(NotificationTrigger notification, bool tryAgain = true)
+        {
+            var shipment = new ShipmentResponseByOrder();
+            shipment.Success = false;
+
+            if (!SetAccessToken(notification.user_id, out MeliAccount meliAccount))
+            {
+                shipment.Message = "Seller not found";
+                return shipment;
+            }
+
+            RestRequest request = new RestRequest($"/orders/{notification.TopicId}/shipments", Method.GET);
+            request.AddHeader("Authorization", $"Bearer {accessToken}");
+            request.AddParameter("x-format-new", "true");
+
+            var result = await restClient.ExecuteAsync<ShipmentResponseByOrder>(request);
+            if (result.IsSuccessful)
+            {
+                shipment = result.Data;
+                shipment.Success = true;
+            }
+            else if (tryAgain && NeedRefreshToken(result))
+            {
+                await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetShipmentDetailsByOrder(notification, false));
+            }
+            else
+            {
+                shipment.Success = false;
+                shipment.Message = result.Content;
+            }
+
+            return shipment;
+        }
+
         public async Task<ShipmentResponse> GetShipmentDetails(NotificationTrigger notification, bool tryAgain = true)
         {
             var shipment = new ShipmentResponse();
@@ -153,7 +187,6 @@ namespace ASM.Services
             RestRequest request = new RestRequest($"/shipments/{notification.TopicId}", Method.GET);
             request.AddHeader("Authorization", $"Bearer {accessToken}");
             request.AddParameter("x-format-new", "true");
-
             var result = await restClient.ExecuteAsync<ShipmentResponse>(request);
             if (result.IsSuccessful)
             {
@@ -163,6 +196,55 @@ namespace ASM.Services
             else if (tryAgain && NeedRefreshToken(result))
             {
                 await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetShipmentDetails(notification, false));
+            }
+            else
+            {
+                shipment.Success = false;
+                shipment.Message = result.Content;
+            }
+
+            return shipment;
+        }
+
+        public async Task<ShipmentResponse> UpdateShipmentStatus(long meliSellerId, long shipmentId, string shipmentStatus, string shipmentSubStatus, bool tryAgain = true)
+        {
+            var shipment = new ShipmentResponse();
+            shipment.Success = false;
+
+            if (!SetAccessToken(meliSellerId, out MeliAccount meliAccount))
+            {
+                shipment.Message = "Seller not found";
+                return shipment;
+            }
+
+            RestRequest request = new RestRequest($"shipments/{shipmentId}/seller_notifications", Method.POST);
+            request.AddHeader("Authorization", $"Bearer {accessToken}");
+            UpdateShipmentStatus body = new()
+            {
+                payload = new PayloadShipment
+                {
+                    service_id = 11,
+                    comment = "comentario ?",
+                    date = DateTime.Now
+                },
+
+                status = shipmentStatus,
+                substatus = shipmentSubStatus,
+                tracking_number = "ABC12345678",
+                tracking_url = "http://urlderastreio.com"
+            };
+            request.AddJsonBody(body);
+
+
+            var result = await restClient.ExecuteAsync<ShipmentResponse>(request);
+            if (result.IsSuccessful)
+            {
+                shipment = result.Data;
+                shipment.Success = true;
+            }
+            else if (tryAgain && NeedRefreshToken(result))
+            {
+                await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await UpdateShipmentStatus(meliSellerId, shipmentId, shipmentStatus, shipmentSubStatus, false));
             }
             else
             {
@@ -196,7 +278,7 @@ namespace ASM.Services
                 return await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await SendMessageToBuyerAsync(sendMessage, false));
             }
 
-            return (true, result.Content);
+            return (false, result.Content);
         }
 
         public async Task<bool> IsFirstSellerMessage(SendMessage sendMessage, bool tryAgain = true)

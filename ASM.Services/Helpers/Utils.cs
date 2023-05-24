@@ -6,18 +6,18 @@ namespace ASM.Services.Helpers
 {
     public class Utils
     {
-        public static string PrepareSellerMessage(string message, Order order)
+        public static string PrepareSellerMessage(string message, Order order, NotificationTrigger notification)
         {
             string productTitle = order.order_items?.FirstOrDefault()?.item?.title ?? string.Empty;
             string? buyerName = order?.buyer?.first_name;
 
             message = SetMentionValue(message, "mention-COMPRADOR", buyerName);
             message = SetMentionValue(message, "mention-PRODUTO", productTitle);
-            message = SetMentionValue(message, "mention-RASTREIO", productTitle);
+            message = SetMentionValue(message, "mention-RASTREIO", notification.trackingNumber);
 
             message = ReplaceWordIgnoreCaseRegex(message, "comprador", buyerName);
             message = ReplaceWordIgnoreCaseRegex(message, "produto", productTitle);
-            message = ReplaceWordIgnoreCaseRegex(message, "rastreio", productTitle);
+            message = ReplaceWordIgnoreCaseRegex(message, "rastreio", notification.trackingNumber);
 
             return message;
         }

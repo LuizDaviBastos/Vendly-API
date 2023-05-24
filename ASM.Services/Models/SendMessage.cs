@@ -7,7 +7,7 @@ namespace ASM.Services.Models
         public long MeliSellerId { get; set; }
         public long BuyerId { get; set; }
         public string Message { get; set; }
-        public long PackId { get; set; }
+        public string PackId { get; set; }
         public IList<string>? Attachments { get; set; }
     }
 }

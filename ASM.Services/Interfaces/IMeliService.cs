@@ -16,5 +16,7 @@ namespace ASM.Services.Interfaces
         public Task<ShipmentResponse> GetShipmentDetails(NotificationTrigger notification, bool tryAgain = true);
         public Task<Dictionary<bool, (MeliAccount, string)>> RevokeMeliAccounts(IEnumerable<MeliAccount> meliAccounts, bool tryAgain = true);
         public Task<(bool, (MeliAccount, string))> RevokeMeliAccount(MeliAccount meli, bool tryAgain = true);
+        public Task<ShipmentResponse> UpdateShipmentStatus(long meliSellerId, long shipmentId, string shipmentStatus, string shipmentSubStatus, bool tryAgain = true);
+        public Task<ShipmentResponseByOrder> GetShipmentDetailsByOrder(NotificationTrigger notification, bool tryAgain = true);
     }
 }
