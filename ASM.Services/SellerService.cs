@@ -11,10 +11,14 @@ namespace ASM.Services
     public class SellerService : ISellerService
     {
         private readonly IUnitOfWork unitOfWork;
+        private readonly IEmailService emailService;
+        private readonly ISettingsService settingsService;
 
-        public SellerService(IUnitOfWork unitOfWork)
+        public SellerService(IUnitOfWork unitOfWork, IEmailService emailService, ISettingsService settingsService)
         {
             this.unitOfWork = unitOfWork;
+            this.emailService = emailService;
+            this.settingsService = settingsService;
         }
 
         public async Task<(string, bool)> SaveAccount(Seller seller)
@@ -79,7 +83,7 @@ namespace ASM.Services
             var meliAccount = await unitOfWork.MeliAccountRepository.GetQueryable().Include(x => x.Messages)
                 .FirstOrDefaultAsync(x => x.MeliSellerId == meliSellerId);
             var message = meliAccount?.Messages?.FirstOrDefault(x => x.Type == messageType);
-            if(message != null)
+            if (message != null)
             {
                 var attachments = await unitOfWork.MessageRepository.GetAttachments(message.Id);
                 message.Attachments = attachments;
@@ -103,11 +107,25 @@ namespace ASM.Services
             var entity = unitOfWork.SellerRepository.Get(sellerId);
             if (entity != null)
             {
-                //TODO
-                // 1 - generate code
-                // 2 - save code in database
-                // 2 - send confirmation code to email
-                entity.ConfirmationCode = "123456";
+                long code = Utils.GetRandomCode();
+                var settings = await settingsService.GetAppSettings();
+
+                string body, title;
+
+                if (!entity.EmailConfirmed)
+                {
+                    title = "Conclua o cadastro da sua conta";
+                    body = settings.HtmlEmailCodeNewUser.Replace(@"{{codigo}}", code.ToString());
+                }
+                else
+                {
+                    title = "Confirme seu email";
+                    body = settings.HtmlEmailCode.Replace(@"{{codigo}}", code.ToString());
+                }
+
+                await emailService.SendEmail(entity.Email, body, title);
+
+                entity.ConfirmationCode = code.ToString();
                 unitOfWork.SellerRepository.Update(entity);
                 await unitOfWork.CommitAsync();
                 return ("", true);
@@ -118,21 +136,21 @@ namespace ASM.Services
         public async Task<(string, bool)> ConfirmEmailAsync(Guid sellerId, string code)
         {
             var entity = unitOfWork.SellerRepository.Get(sellerId);
-            if(entity != null)
+            if (entity != null)
             {
-                if(entity.ConfirmationCode == code)
+                if (entity.ConfirmationCode == code)
                 {
                     entity.EmailConfirmed = true;
                     entity.ConfirmationCode = null;
                     unitOfWork.SellerRepository.Update(entity);
                     await unitOfWork.CommitAsync();
                     return ("", true);
-                } 
+                }
                 else
                 {
                     return ("Código inválido", false);
                 }
-                
+
             }
             return ("Usuário não encontrado", false);
         }
@@ -142,7 +160,7 @@ namespace ASM.Services
             var order = await unitOfWork.SellerOrderRepository.GetQueryable()
                .Where(x => x.MeliSellerId == meliSellerId && x.OrderId == orderId).FirstOrDefaultAsync();
 
-            if(order == null)
+            if (order == null)
             {
                 order = await SaveOrUpdateOrderMessageStatus(sellerId, meliSellerId, orderId, type, false);
             }

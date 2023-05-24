@@ -46,6 +46,17 @@ namespace ASM.Services.Helpers
             string replacedText = Regex.Replace(input, pattern, value ?? "");
             return replacedText;
         }
+
+        public static long GetRandomCode()
+        {
+            string code = "";
+            var random = new Random();
+            for(int i  = 0; i < 6; i++)
+            {
+                code += random.Next(0, 9);
+            }
+            return long.Parse(code);
+        }
     }
 }
 

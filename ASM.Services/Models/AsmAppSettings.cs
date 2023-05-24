@@ -1,4 +1,5 @@
-﻿using Google.Cloud.Firestore;
+﻿using ASM.Services.Models.Settings;
+using Google.Cloud.Firestore;
 
 namespace ASM.Services.Models
 {
@@ -13,5 +14,14 @@ namespace ASM.Services.Models
 
         [FirestoreProperty(Name = "redirectUrl")]
         public string? RedirectUrl { get; set; }
+
+        [FirestoreProperty(Name = "smtpSettings")]
+        public SmtpSettings? SmtpSettings { get; set; }
+
+        [FirestoreProperty(Name = "htmlEmailCodeNewUser")]
+        public string? HtmlEmailCodeNewUser { get; set; }
+
+        [FirestoreProperty(Name = "htmlEmailCode")]
+        public string? HtmlEmailCode { get; set; }
     }
 }

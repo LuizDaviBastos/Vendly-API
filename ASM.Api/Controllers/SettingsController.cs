@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System;
 
 namespace ASM.Api.Controllers
 {
@@ -21,18 +22,21 @@ namespace ASM.Api.Controllers
         private readonly IUnitOfWork uow;
         private readonly UserManager<Seller> userManager;
         private readonly ISettingsService setingsService;
+        private readonly IEmailService emailService;
 
         public SettingsController(IMeliService meliService,
               ISellerService sellerService,
               UserManager<Seller> userManager,
               IUnitOfWork uow,
-              ISettingsService setingsService)
+              ISettingsService setingsService,
+              IEmailService emailService)
         {
             this.meliService = meliService;
             this.sellerService = sellerService;
             this.userManager = userManager;
             this.uow = uow;
             this.setingsService = setingsService;
+            this.emailService = emailService;
         }
 
         [HttpPost("ChangePassword")]
