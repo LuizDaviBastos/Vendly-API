@@ -30,7 +30,7 @@ namespace ASM.PreFunction
         {
             if(notification.IsOrderV2)
             {
-                notification.OrderId = notification.TopicId.ToString();
+                notification.OrderId = notification.TopicId;
                 var sellerOrder = await sellerService.GetSellerOrder(notification.user_id, notification.TopicId, MessageType.AfterSeller);
                 if (sellerOrder?.AfterSellerMessageStatus == true) return;
 
@@ -41,6 +41,7 @@ namespace ASM.PreFunction
                 var shipping = await meliService.GetShipmentDetails(notification);
                 bool sent = (shipping.status == ShipmentStatus.ReadyToShip && shipping.substatus == ShipmentSubStatus.InHub) || (shipping.status == ShipmentStatus.Shipped);
                 bool delivered = shipping.status == ShipmentStatus.Delivered;
+
                 if (sent)
                 {
                     notification.OrderId = shipping.order_id;
@@ -49,18 +50,19 @@ namespace ASM.PreFunction
                 }
                 else if (delivered)
                 {
+                    notification.OrderId = shipping.order_id;
                     await storageService.SendMessageAsync("process-delivered-notification", notification);
                 }
             }
             else if (notification.IsFeedback)
             {
-                var feedback = await meliService.GetFeedbackDetailsAsync(notification);
-                //notification.OrderId = feedback.order_id;
+                /*var feedback = await meliService.GetFeedbackDetailsAsync(notification);
                 if (feedback?.purchase?.fulfilled ?? false)
                 {
-                    notification.OrderId = feedback.purchase.order_id.ToString();
+                    notification.OrderId = feedback.purchase.order_id;
+                    notification.OrderId = feedback.purchase.order_id;
                     await storageService.SendMessageAsync("process-delivered-notification", notification);
-                }
+                }*/
             }
         }
     }

@@ -33,13 +33,21 @@ namespace ASM.Function.Services
             var sendMessage = new SendMessage
             {
                 MeliSellerId = notification.user_id,
-                PackId = notification.OrderId, //important to send message to buyer
+                PackId = notification.OrderId.ToString(), //important to send message to buyer
                 Message = sellerMessage.Message
             };
 
             var order = await meliService.GetOrderDetailsAsync(notification);
             if (order.Success ?? false)
             {
+                var orderCreated = order.date_created.ToUniversalTime();
+                var diff = DateTime.UtcNow - orderCreated;
+                if(diff.TotalHours > 1 && messageType == MessageType.AfterSeller)
+                {
+                    log.LogInformation($"The order has already passed 1 hour. OrderId: {order.id} | SellerId: {notification.user_id}");
+                    await sellerService.SaveOrUpdateOrderMessageStatus(sellerId, notification.user_id, notification.TopicId, messageType, true);
+                    return;
+                }
                 sendMessage.BuyerId = order.buyer.id;
                 if (!string.IsNullOrEmpty(sellerMessage?.Message))
                 {
@@ -67,7 +75,7 @@ namespace ASM.Function.Services
             }
             else
             {
-                log.LogInformation($"Error to get order details. MeliAccountId: {sellerMessage?.MeliAccountId}");
+                log.LogError($"Error to get order details. MeliAccountId: {sellerMessage?.MeliAccountId}");
             }
         }
     }

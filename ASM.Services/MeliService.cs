@@ -150,7 +150,7 @@ namespace ASM.Services
                 return shipment;
             }
 
-            RestRequest request = new RestRequest($"/orders/{notification.TopicId}/shipments", Method.GET);
+            RestRequest request = new RestRequest($"/orders/{notification.OrderId}/shipments", Method.GET);
             request.AddHeader("Authorization", $"Bearer {accessToken}");
             request.AddParameter("x-format-new", "true");
 

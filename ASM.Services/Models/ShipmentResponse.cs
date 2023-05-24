@@ -39,7 +39,7 @@ namespace ASM.Services.Models
         public string market_place { get; set; }
         public ReceiverAddress receiver_address { get; set; }
         public object customer_id { get; set; }
-        public string order_id { get; set; }
+        public long order_id { get; set; }
         public string status { get; set; }
 
 

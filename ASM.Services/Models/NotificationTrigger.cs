@@ -30,6 +30,6 @@
         public bool IsFeedback { get => topic == "orders_feedback"; }
         public bool TopicIdIsValid { get => this.TopicId != 0; }
         public bool IsShipping { get => topic == "shipments"; }
-        public string OrderId { get; set; }
+        public long? OrderId { get; set; }
     }
 }
