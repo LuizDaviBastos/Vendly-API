@@ -206,6 +206,41 @@ namespace ASM.Services
             return shipment;
         }
 
+        public async Task<UrlTrackingResponse> GetShipmentUrlTracking(NotificationTrigger notification, bool tryAgain = true)
+        {
+            //shipments/$SHIPMENT_ID/carrier
+
+            var tracking = new UrlTrackingResponse();
+            tracking.Success = false;
+
+            if (!SetAccessToken(notification.user_id, out MeliAccount meliAccount))
+            {
+                tracking.Message = "Seller not found";
+                return tracking;
+            }
+
+            RestRequest request = new RestRequest($"/shipments/{notification.TopicId}/carrier", Method.GET);
+            request.AddHeader("Authorization", $"Bearer {accessToken}");
+            request.AddParameter("x-format-new", "true");
+            var result = await restClient.ExecuteAsync<UrlTrackingResponse>(request);
+            if (result.IsSuccessful)
+            {
+                tracking = result.Data;
+                tracking.Success = true;
+            }
+            else if (tryAgain && NeedRefreshToken(result))
+            {
+                await RefreshTokenAndTryAgain(meliAccount!.RefreshToken, async () => await GetShipmentDetails(notification, false));
+            }
+            else
+            {
+                tracking.Success = false;
+                tracking.Message = result.Content;
+            }
+
+            return tracking;
+        }
+
         public async Task<ShipmentResponse> UpdateShipmentStatus(long meliSellerId, long shipmentId, string shipmentStatus, string shipmentSubStatus, bool tryAgain = true)
         {
             var shipment = new ShipmentResponse();

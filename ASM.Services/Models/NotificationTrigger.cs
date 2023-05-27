@@ -10,6 +10,7 @@
         public int attempts { get; set; }
         public DateTime? received { get; set; }
         public string? trackingNumber{ get; set; }
+        public string? trackingUrl { get; set; }
 
         public long TopicId 
         { 

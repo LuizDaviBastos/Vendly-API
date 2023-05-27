@@ -46,6 +46,8 @@ namespace ASM.PreFunction
                 {
                     notification.OrderId = shipping.order_id;
                     notification.trackingNumber = shipping.tracking_number;
+                    var trackingUrl = await meliService.GetShipmentUrlTracking(notification);
+                    notification.trackingUrl = trackingUrl.Url;
                     await storageService.SendMessageAsync("process-shipping-notification", notification);
                 }
                 else if (delivered)
