@@ -4,6 +4,7 @@ using ASM.Data.Interfaces;
 using ASM.Services.Helpers;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace ASM.Services
@@ -13,12 +14,14 @@ namespace ASM.Services
         private readonly IUnitOfWork unitOfWork;
         private readonly IEmailService emailService;
         private readonly ISettingsService settingsService;
+        private readonly UserManager<Seller> userManager;
 
-        public SellerService(IUnitOfWork unitOfWork, IEmailService emailService, ISettingsService settingsService)
+        public SellerService(IUnitOfWork unitOfWork, IEmailService emailService, ISettingsService settingsService, UserManager<Seller> userManager)
         {
             this.unitOfWork = unitOfWork;
             this.emailService = emailService;
             this.settingsService = settingsService;
+            this.userManager = userManager;
         }
 
         public async Task<(string, bool)> SaveAccount(Seller seller)
@@ -153,6 +156,40 @@ namespace ASM.Services
 
             }
             return ("Usuário não encontrado", false);
+        }
+
+        public async Task<(string, bool)> SendEmailRecoveryPassword(string email)
+        {
+            var entity = await unitOfWork.SellerRepository.GetByEmailAsync(email);
+            if (entity == null) return ("Usuario não encontrado.", false);
+            else if(!entity.EmailConfirmed) return ("Seu e-mail não foi confirmado.", false);
+
+            var settings = await settingsService.GetAppSettings();
+
+            string body, title;
+            string code = await userManager.GeneratePasswordResetTokenAsync(entity);
+            string encodedCode = Utils.GetBase64String(code);
+
+            string url = $"{settings.UrlBaseApi}/api/auth/RedirectConfirmRecoveryPassword?sellerId={entity.Id}&code={encodedCode}";
+            title = "Recupere sua senha";
+            body = settings.HtmlRecoveryPassword.Replace("{{name}}", entity.FirstName).Replace("{{url}}", url);
+
+            await emailService.SendEmail(entity.Email, body, title);
+
+            return ("", true);
+        }
+
+        public async Task<(string, bool)> RecoveryPassword(Guid sellerId, string encodedCode, string newPassword)
+        {
+            var entity = unitOfWork.SellerRepository.Get(sellerId);
+            if (entity == null) return ("Usuario não encontrado.", false);
+            else if (!entity.EmailConfirmed) return ("Seu e-mail não foi confirmado.", false);
+
+            string code = Utils.GetFromBase64String(encodedCode);
+            IdentityResult? result = await userManager.ResetPasswordAsync(entity, code, newPassword);
+            if(!result?.Succeeded ?? false) return ("Token de recuperação inválido.", false);
+
+            return ("", true);
         }
 
         public async Task<SellerOrder> GetSellerOrder(Guid sellerId, long meliSellerId, long orderId, MessageType type)

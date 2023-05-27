@@ -18,5 +18,7 @@ namespace ASM.Services.Interfaces
         public Task<SellerOrder?> GetSellerOrder(long meliSellerId, long orderId, MessageType type);
         public Task<SellerOrder> SaveOrUpdateOrderMessageStatus(Guid sellerId, long meliSellerId, long orderId, MessageType type, bool status);
         Task DeleteAccount(Seller user);
+        public Task<(string, bool)> SendEmailRecoveryPassword(string email);
+        public Task<(string, bool)> RecoveryPassword(Guid sellerId, string code, string newPassword);
     }
 }

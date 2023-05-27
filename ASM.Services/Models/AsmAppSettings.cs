@@ -23,5 +23,8 @@ namespace ASM.Services.Models
 
         [FirestoreProperty(Name = "htmlEmailCode")]
         public string? HtmlEmailCode { get; set; }
+
+        [FirestoreProperty(Name = "htmlRecoveryPassword")]
+        public string? HtmlRecoveryPassword { get; set; }
     }
 }

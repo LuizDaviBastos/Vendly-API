@@ -212,6 +212,57 @@ namespace ASM.Api.Controllers
             }
         }
 
+        [HttpGet("RecoveryPassword")]
+        public async Task<IActionResult> RecoveryPassword(string email)
+        {
+            try
+            {
+                var result = await sellerService.SendEmailRecoveryPassword(email);
+                if(result.Item2)
+                {
+                    return Ok(RequestResponse.GetSuccess());
+                }
+
+                return BadRequest(RequestResponse.GetError(result.Item1));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("RedirectConfirmRecoveryPassword")]
+        public async Task<IActionResult> RedirectConfirmRecoveryPassword(Guid sellerId, string code)
+        {
+            try
+            {
+                return Redirect($"asm.app://auth/confirm-recovery-password?sellerId={sellerId}&code={code}");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("ConfirmRecoveryPassword")]
+        public async Task<IActionResult> ConfirmRecoveryPassword([FromBody] RecoveryPassword recoveryPassword)
+        {
+            try
+            {
+                var result = await sellerService.RecoveryPassword(recoveryPassword.SellerId, recoveryPassword.Code, recoveryPassword.NewPassword);
+                if (result.Item2)
+                {
+                    return Ok(RequestResponse.GetSuccess());
+                }
+
+                return BadRequest(RequestResponse.GetError(result.Item1));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet("AuthSignup")]
         public IActionResult AuthSignup()
         {

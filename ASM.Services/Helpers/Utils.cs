@@ -1,5 +1,8 @@
 ﻿using ASM.Services.Models;
+using Azure.Storage.Blobs.Models;
 using HtmlAgilityPack;
+using Newtonsoft.Json;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ASM.Services.Helpers
@@ -56,6 +59,28 @@ namespace ASM.Services.Helpers
                 code += random.Next(0, 9);
             }
             return long.Parse(code);
+        }
+
+        public static string GetBase64String<T>(T value)
+        {
+            var json = JsonConvert.SerializeObject(value);
+            return GetBase64String(json);
+        }
+
+        public static string GetBase64String(string value) 
+        {
+           return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+        }
+
+        public static T? GetFromBase64String<T>(string baseString)
+        {
+            string value = GetFromBase64String(baseString);
+            return JsonConvert.DeserializeObject<T>(value);
+        }
+
+        public static string GetFromBase64String(string baseString)
+        {
+            return Encoding.UTF8.GetString(Convert.FromBase64String(baseString));
         }
     }
 }

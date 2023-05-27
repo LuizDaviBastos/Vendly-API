@@ -8,4 +8,11 @@ namespace ASM.Api.Models
         public string Password { get; set; }
         public string NewPassword { get; set; }
     }
+
+    public class RecoveryPassword
+    {
+        public Guid SellerId { get; set; }
+        public string Code { get; set; }
+        public string NewPassword { get; set; }
+    }
 }
