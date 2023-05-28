@@ -23,7 +23,9 @@ namespace ASM.Core.Function.Functions
         [FunctionName("NotificationProcess")]
         public async Task Run([QueueTrigger("process-order-notification")] NotificationTrigger notification, ILogger log)
         {
-            
+            var status = await sellerService.ExpirateDateValid(notification.user_id);
+            if (!status) return;
+
             var sellerMessage = await sellerService.GetMessageByMeliSellerId(notification.user_id, MessageType.AfterSeller);
             SellerOrder sellerOrder = await sellerService.GetSellerOrder(sellerMessage.MeliAccount.SellerId.Value, notification.user_id, notification.TopicId, MessageType.AfterSeller);
             if (!(sellerMessage?.Activated ?? false) || sellerOrder.AfterSellerMessageStatus == true) return;

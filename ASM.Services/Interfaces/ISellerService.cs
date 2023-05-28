@@ -22,6 +22,8 @@ namespace ASM.Services.Interfaces
         public Task<(string, bool)> RecoveryPassword(Guid sellerId, string code, string newPassword);
         public Task<Seller?> GetSellerOnly(Guid sellerId);
         public Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, BillingStatus status, DateTime expireIn, DateTime lastPayment);
-        public Task<PaymentHistory> AddPaymentHistory(Guid sellerId, decimal price, DateTime createdDate, string metaData = null);
+        public Task<PaymentHistory> AddPaymentHistory(Guid sellerId, double? price, DateTime createdDate, string metaData = null);
+        public Task<bool> ExpirateDateValid(Guid sellerId);
+        public Task<bool> ExpirateDateValid(long meliSellerId);
     }
 }

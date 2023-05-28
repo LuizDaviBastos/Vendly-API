@@ -34,7 +34,7 @@ namespace ASM.Services
                         currency_id = "BRL",
                         quantity = 1,
                         title = settings?.VendlyItem?.Title ?? "Vendly Plano Mensal",
-                        unit_price = settings?.VendlyItem?.Price ?? 39.90M
+                        unit_price = settings?.VendlyItem?.Price ?? 39.90
                     }
                 },
                 Metadata = new Metadata

@@ -88,5 +88,19 @@ namespace ASM.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpGet("ExpiredStatus")]
+        public async Task<IActionResult> ExpiredStatus(Guid sellerId)
+        {
+            try
+            {
+                var status = await sellerService.ExpirateDateValid(sellerId);
+                return Ok(RequestResponse.GetSuccess(status));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

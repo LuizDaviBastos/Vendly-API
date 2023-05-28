@@ -28,6 +28,9 @@ namespace ASM.PreFunction.Functions
         [FunctionName("PreProcessNotifications")]
         public async Task Run([QueueTrigger("pre-process-notifications")] NotificationTrigger notification, ILogger log)
         {
+            var status = await sellerService.ExpirateDateValid(notification.user_id);
+            if (!status) return;
+
             if (notification.IsOrderV2)
             {
                 notification.OrderId = notification.TopicId;

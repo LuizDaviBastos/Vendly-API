@@ -3,6 +3,7 @@ using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
@@ -50,6 +51,9 @@ namespace ASM.PreFunction.Functions
                         return;
                     }
 
+                    var status = await sellerService.ExpirateDateValid(sellerId.Value);
+                    if (status) return;
+
                     var seller = await sellerService.GetSellerOnly(sellerId.Value);
                     if(seller == null)
                     {
@@ -60,7 +64,7 @@ namespace ASM.PreFunction.Functions
                     var lastPayment = paymentInformations.date_approved?.ToUniversalTime() ?? DateTime.UtcNow;
                     var expireIn = DateTime.UtcNow.AddMonths(1);
                     var billing = await sellerService.UpdateBillingInformation(seller.Id, BillingStatus.Active, expireIn, lastPayment);
-                    decimal price = (decimal)paymentInformations.transaction_amount;
+                    double? price = paymentInformations.transaction_amount;
                     DateTime createdDate = paymentInformations.date_created?.ToUniversalTime() ?? DateTime.UtcNow;
                     await sellerService.AddPaymentHistory(sellerId.Value, price, createdDate); //TODO add payment history
                 }

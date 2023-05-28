@@ -1,15 +1,11 @@
-﻿using ASM.Data.Common;
-using ASM.Data.Entities;
+﻿using ASM.Data.Entities;
 using ASM.Data.Enums;
 using ASM.Data.Interfaces;
 using ASM.Services.Helpers;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
-using Google.Api;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using MongoDB.Driver.Core.Operations;
-using MongoDB.Driver.Core.Servers;
 
 namespace ASM.Services
 {
@@ -112,6 +108,10 @@ namespace ASM.Services
         public async Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, BillingStatus status, DateTime expireIn, DateTime lastPayment)
         {
             var billing = await unitOfWork.BillingInformationRepository.GetQueryable().Where(x => x.SellerId == sellerId).FirstOrDefaultAsync();
+            if (billing.ExpireIn > DateTime.UtcNow)
+            {
+                return null;
+            }
             if (billing == null)
             {
                 billing = new PaymentInformation
@@ -136,13 +136,13 @@ namespace ASM.Services
             return billing;
         }
 
-        public async Task<PaymentHistory> AddPaymentHistory(Guid sellerId, decimal price, DateTime createdDate, string metaData = null)
+        public async Task<PaymentHistory> AddPaymentHistory(Guid sellerId, double? price, DateTime createdDate, string metaData = null)
         {
             var history = new PaymentHistory
             {
                 SellerId = sellerId,
                 CreatedDate = createdDate,
-                Price = price,
+                Price = Convert.ToDecimal(price ?? 0),
                 MetaData = metaData
             };
 
@@ -289,9 +289,24 @@ namespace ASM.Services
             return order;
         }
 
-        public async Task<PaymentInformation> UpdateBillingInformation(Seller seller, BillingStatus billingStatus, DateTime paymentDate)
+        public async Task<bool> ExpirateDateValid(Guid sellerId)
         {
+            var expireIn = await unitOfWork.BillingInformationRepository.GetQueryable()
+                .Where(x => x.SellerId == sellerId).Select(x => x.ExpireIn).FirstOrDefaultAsync();
+            if (!expireIn.HasValue) return false;
 
+            return (expireIn.Value > DateTime.UtcNow);
+        }
+
+        public async Task<bool> ExpirateDateValid(long meliSellerId)
+        {
+            Guid? sellerId = await unitOfWork.MeliAccountRepository.GetQueryable()
+                .Where(x => x.MeliSellerId == meliSellerId).Include(x => x.Seller)
+                .Select(x => x.Seller.Id)
+                .FirstOrDefaultAsync();
+            if (!sellerId.HasValue) return false;
+
+            return await ExpirateDateValid(sellerId.Value);
         }
 
         private void UpdateMessageStatus(SellerOrder order, MessageType type, bool status)

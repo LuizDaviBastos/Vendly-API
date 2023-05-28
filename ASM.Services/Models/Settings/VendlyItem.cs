@@ -17,6 +17,6 @@ namespace ASM.Services.Models.Settings
         public string? CurrencyId { get; set; }
 
         [FirestoreProperty(Name = "price")]
-        public decimal? Price { get; set; }
+        public double? Price { get; set; }
     }
 }

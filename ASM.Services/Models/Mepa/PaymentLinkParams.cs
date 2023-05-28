@@ -12,6 +12,6 @@
         public string title { get; set; }
         public int quantity { get; set; }
         public string currency_id { get; set; }
-        public decimal unit_price { get; set; }
+        public double unit_price { get; set; }
     }
 }
