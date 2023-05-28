@@ -10,7 +10,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace ASM.PreFunction
+namespace ASM.PreFunction.Functions
 {
     public class PreProcessNotifications
     {
@@ -28,7 +28,7 @@ namespace ASM.PreFunction
         [FunctionName("PreProcessNotifications")]
         public async Task Run([QueueTrigger("pre-process-notifications")] NotificationTrigger notification, ILogger log)
         {
-            if(notification.IsOrderV2)
+            if (notification.IsOrderV2)
             {
                 notification.OrderId = notification.TopicId;
                 var sellerOrder = await sellerService.GetSellerOrder(notification.user_id, notification.TopicId, MessageType.AfterSeller);
@@ -39,7 +39,7 @@ namespace ASM.PreFunction
             else if (notification.IsShipping)
             {
                 var shipping = await meliService.GetShipmentDetails(notification);
-                bool sent = (shipping.status == ShipmentStatus.ReadyToShip && shipping.substatus == ShipmentSubStatus.InHub) || (shipping.status == ShipmentStatus.Shipped);
+                bool sent = shipping.status == ShipmentStatus.ReadyToShip && shipping.substatus == ShipmentSubStatus.InHub || shipping.status == ShipmentStatus.Shipped;
                 bool delivered = shipping.status == ShipmentStatus.Delivered;
 
                 if (sent)

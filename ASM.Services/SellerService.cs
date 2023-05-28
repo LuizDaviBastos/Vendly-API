@@ -1,11 +1,15 @@
-﻿using ASM.Data.Entities;
+﻿using ASM.Data.Common;
+using ASM.Data.Entities;
 using ASM.Data.Enums;
 using ASM.Data.Interfaces;
 using ASM.Services.Helpers;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using Google.Api;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver.Core.Operations;
+using MongoDB.Driver.Core.Servers;
 
 namespace ASM.Services
 {
@@ -94,10 +98,57 @@ namespace ASM.Services
             return message;
         }
 
-        public async Task<Seller?> GetSellerInfo(Guid sellerId)
+        public async Task<Seller?> GetSellerAndMeliAccounts(Guid sellerId)
         {
             return await unitOfWork.SellerRepository.GetQueryable().Where(x => x.Id == sellerId)
                 .Include(x => x.MeliAccounts).FirstOrDefaultAsync();
+        }
+
+        public async Task<Seller?> GetSellerOnly(Guid sellerId)
+        {
+            return await unitOfWork.SellerRepository.GetQueryable().Where(x => x.Id == sellerId).FirstOrDefaultAsync();
+        }
+
+        public async Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, BillingStatus status, DateTime expireIn, DateTime lastPayment)
+        {
+            var billing = await unitOfWork.BillingInformationRepository.GetQueryable().Where(x => x.SellerId == sellerId).FirstOrDefaultAsync();
+            if (billing == null)
+            {
+                billing = new PaymentInformation
+                {
+                    ExpireIn = expireIn,
+                    SellerId = sellerId,
+                    LastPayment = lastPayment,
+                    Status = status
+                };
+
+                unitOfWork.BillingInformationRepository.Add(billing);
+            }
+            else
+            {
+                billing.Status = BillingStatus.Active;
+                billing.LastPayment = lastPayment;
+                billing.ExpireIn = expireIn;
+
+                unitOfWork.BillingInformationRepository.Update(billing);
+            }
+            await unitOfWork.CommitAsync();
+            return billing;
+        }
+
+        public async Task<PaymentHistory> AddPaymentHistory(Guid sellerId, decimal price, DateTime createdDate, string metaData = null)
+        {
+            var history = new PaymentHistory
+            {
+                SellerId = sellerId,
+                CreatedDate = createdDate,
+                Price = price,
+                MetaData = metaData
+            };
+
+            unitOfWork.PaymentHistoryRepository.Add(history);
+            await unitOfWork.CommitAsync();
+            return history;
         }
 
         public async Task<bool> HasMeliAccount(Guid sellerId)
@@ -162,7 +213,7 @@ namespace ASM.Services
         {
             var entity = await unitOfWork.SellerRepository.GetByEmailAsync(email);
             if (entity == null) return ("Usuario não encontrado.", false);
-            else if(!entity.EmailConfirmed) return ("Seu e-mail não foi confirmado.", false);
+            else if (!entity.EmailConfirmed) return ("Seu e-mail não foi confirmado.", false);
 
             var settings = await settingsService.GetAppSettings();
 
@@ -187,7 +238,7 @@ namespace ASM.Services
 
             string code = Utils.GetFromBase64String(encodedCode);
             IdentityResult? result = await userManager.ResetPasswordAsync(entity, code, newPassword);
-            if(!result?.Succeeded ?? false) return ("Token de recuperação inválido.", false);
+            if (!result?.Succeeded ?? false) return ("Token de recuperação inválido.", false);
 
             return ("", true);
         }
@@ -236,6 +287,11 @@ namespace ASM.Services
 
             await unitOfWork.CommitAsync();
             return order;
+        }
+
+        public async Task<PaymentInformation> UpdateBillingInformation(Seller seller, BillingStatus billingStatus, DateTime paymentDate)
+        {
+
         }
 
         private void UpdateMessageStatus(SellerOrder order, MessageType type, bool status)

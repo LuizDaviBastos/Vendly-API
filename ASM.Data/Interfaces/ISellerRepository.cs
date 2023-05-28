@@ -14,8 +14,6 @@ namespace ASM.Data.Interfaces
         public Seller? GetByMeliSellerId(long sellerId);
         public Seller? GetByAccessToken(string accessToken);
         public Task<Seller?> GetByEmailAsync(string email);
-        public void DisableSeller(Seller seller);
-        public void EnableSeller(Seller seller);
         public IEnumerable<Seller> GetActiveBillings();
         public Task<Seller?> MeliSellerExist(long meliSellerId);
     }

@@ -14,5 +14,6 @@ namespace ASM.Data.Entities
         public virtual PaymentInformation BillingInformation { get; set; }
         public virtual IList<MeliAccount> MeliAccounts { get; set; }
         public virtual IList<SellerOrder> Orders { get; set; }
+        public virtual IList<PaymentHistory> PaymentHistory { get; set; }
     }
 }

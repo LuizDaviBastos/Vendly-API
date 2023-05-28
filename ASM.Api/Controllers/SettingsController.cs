@@ -62,7 +62,7 @@ namespace ASM.Api.Controllers
         {
             try
             {
-                Seller? user = await sellerService.GetSellerInfo(deleteAccount.SellerId);
+                Seller? user = await sellerService.GetSellerAndMeliAccounts(deleteAccount.SellerId);
                 if (user == null)
                 {
                     return BadRequest(RequestResponse.GetError("User not found"));

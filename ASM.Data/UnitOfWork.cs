@@ -11,6 +11,8 @@ namespace ASM.Data
         private IMeliAccountRepository meliAccountRepository;
         private IMessageRepository messageRepository;
         private ISellerOrderRepository sellerOrderRepository;
+        private IBillingInformationRepository billingInformationRepository;
+        private IPaymentHistoryRepository paymentHistoryRepository;
 
         public UnitOfWork(AsmContext asmContext)
         {
@@ -50,6 +52,24 @@ namespace ASM.Data
             {
                 if (sellerOrderRepository == null) sellerOrderRepository = new SellerOrderRepository(asmContext);
                 return sellerOrderRepository;
+            }
+        }
+
+        public IBillingInformationRepository BillingInformationRepository 
+        {
+            get
+            {
+                if (billingInformationRepository == null) billingInformationRepository = new BillingInformationRepository(asmContext);
+                return billingInformationRepository;
+            }
+        }
+
+        public IPaymentHistoryRepository PaymentHistoryRepository
+        {
+            get
+            {
+                if (paymentHistoryRepository == null) paymentHistoryRepository = new PaymentHistoryRepository(asmContext);
+                return paymentHistoryRepository;
             }
         }
 

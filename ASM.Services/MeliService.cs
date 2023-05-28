@@ -386,6 +386,32 @@ namespace ASM.Services
             return response;
         }
 
+        public async Task<IList<SaveAttachmentResponse>> GetSignature(Guid sellerId, SellerMessage sellerMessage)
+        {
+            List<SaveAttachmentResponse> response = new();
+            if (!sellerMessage.Attachments.Any()) return response;
+            foreach (var attachment in sellerMessage.Attachments)
+            {
+                var attachContent = await storageService.Download(sellerId, sellerMessage.Type, attachment.Name);
+
+                RestRequest restRequest = new RestRequest($"/messages/attachments", Method.POST);
+                restRequest.AddHeader("Authorization", $"Bearer {this.accessToken}")
+                    .AddHeader("content-type", "multipart/form-data")
+                    .AddParameter("tag", "post_sale")
+                    .AddParameter("site_id", "MLB");
+
+                restRequest.AddFileBytes("file", attachContent.ToArray(), attachment.Name);
+
+                var requestResponse = await restClient.ExecuteAsync<SaveAttachmentResponse>(restRequest);
+                if (requestResponse.IsSuccessful)
+                {
+                    response.Add(requestResponse.Data);
+                }
+            }
+
+            return response;
+        }
+
         private async Task<SellerItems?> GetSellerItems(long meliSellerId, bool tryAgain = true)
         {
            if (!SetAccessToken(meliSellerId, out MeliAccount? meliAccount)) throw new Exception($"SetAccessToken Error{(meliAccount == null || meliAccount?.Id == Guid.Empty ? ". Seller not found" : "")}");

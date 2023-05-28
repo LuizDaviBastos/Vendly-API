@@ -10,7 +10,7 @@ namespace ASM.Services.Interfaces
         Task<(string, bool)> AddMeliAccount(Guid sellerId, AccessToken accessToken);
         Task<(MeliAccount?, bool)> UpdateTokenMeliAccount(AccessToken accessToken);
         Task<SellerMessage?> GetMessageByMeliSellerId(long meliSellerId, MessageType messageType);
-        Task<Seller?> GetSellerInfo(Guid sellerId);
+        Task<Seller?> GetSellerAndMeliAccounts(Guid sellerId);
         Task<bool> HasMeliAccount(Guid sellerId);
         Task<(string, bool)> ConfirmEmailAsync(Guid sellerId, string code);
         Task<(string, bool)> SendEmailConfirmationCode(Guid sellerId);
@@ -20,5 +20,8 @@ namespace ASM.Services.Interfaces
         Task DeleteAccount(Seller user);
         public Task<(string, bool)> SendEmailRecoveryPassword(string email);
         public Task<(string, bool)> RecoveryPassword(Guid sellerId, string code, string newPassword);
+        public Task<Seller?> GetSellerOnly(Guid sellerId);
+        public Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, BillingStatus status, DateTime expireIn, DateTime lastPayment);
+        public Task<PaymentHistory> AddPaymentHistory(Guid sellerId, decimal price, DateTime createdDate, string metaData = null);
     }
 }

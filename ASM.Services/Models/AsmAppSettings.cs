@@ -26,5 +26,11 @@ namespace ASM.Services.Models
 
         [FirestoreProperty(Name = "htmlRecoveryPassword")]
         public string? HtmlRecoveryPassword { get; set; }
+
+        [FirestoreProperty(Name = "VendlyItem")]
+        public VendlyItem? VendlyItem { get; set; }
+
+        [FirestoreProperty(Name = "MePaToken")]
+        public string? MePaToken { get; set; }
     }
 }

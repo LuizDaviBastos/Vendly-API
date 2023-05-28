@@ -13,16 +13,6 @@ namespace ASM.Data.Common
     {
         public SellerRepository(AsmContext context): base(context) { }
 
-        public void DisableSeller(Seller seller)
-        {
-            seller.BillingInformation.Status = BillingStatus.Inactive;
-        }
-
-        public void EnableSeller(Seller seller)
-        {
-            seller.BillingInformation.Status = BillingStatus.Active;
-        }
-
         public IEnumerable<Seller> GetActiveBillings()
         {
             return dbSet.Where(x => x.BillingInformation.Status == BillingStatus.Active);

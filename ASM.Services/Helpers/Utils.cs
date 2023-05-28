@@ -17,12 +17,12 @@ namespace ASM.Services.Helpers
             message = SetMentionValue(message, "mention-COMPRADOR", buyerName);
             message = SetMentionValue(message, "mention-PRODUTO", productTitle);
             message = SetMentionValue(message, "mention-RASTREIO", notification.trackingNumber);
-            message = SetMentionValue(message, "mention-URLRASTREIO", notification.trackingUrl);
+            message = SetMentionValue(message, "mention-RASTREIOURL", notification.trackingUrl);
 
             message = ReplaceWordIgnoreCaseRegex(message, "comprador", buyerName);
             message = ReplaceWordIgnoreCaseRegex(message, "produto", productTitle);
             message = ReplaceWordIgnoreCaseRegex(message, "rastreio", notification.trackingNumber);
-            message = ReplaceWordIgnoreCaseRegex(message, "urlrastreio", notification.trackingUrl);
+            message = ReplaceWordIgnoreCaseRegex(message, "rastreiourl", notification.trackingUrl);
 
             return message;
         }

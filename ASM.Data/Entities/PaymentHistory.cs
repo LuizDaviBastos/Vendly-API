@@ -4,15 +4,15 @@ using System.Text.Json.Serialization;
 
 namespace ASM.Data.Entities
 {
-    public class PaymentInformation : IEntityBase
+    public class PaymentHistory : IEntityBase
     {
         public Guid Id { get; set; }
-        public BillingStatus? Status { get; set; }
-        public DateTime? LastPayment { get; set; }
-        public DateTime? ExpireIn { get; set; }
-
+        public DateTime CreatedDate { get; set; }
+        public decimal Price { get; set; }
+        public string? MetaData { get; set; }
 
         public Guid SellerId { get; set; }
+
         [JsonIgnore]
         public virtual Seller Seller { get; set; }
     }
