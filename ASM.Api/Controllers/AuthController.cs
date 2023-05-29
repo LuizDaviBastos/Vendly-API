@@ -59,7 +59,11 @@ namespace ASM.Api.Controllers
                     FirstName = account.FirstName,
                     LastName = account.LastName,
                     UserName = account.Email,
-                    Country = account.Country
+                    Country = account.Country,
+                    BillingInformation = new PaymentInformation
+                    {
+                        ExpireIn = DateTime.UtcNow.AddDays(15)
+                    }
                 };
 
                 var createResult = await userManager.CreateAsync(entity, account.Password);

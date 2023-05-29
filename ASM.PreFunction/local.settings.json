@@ -1,7 +1,7 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=vendlybrstorage;AccountKey=HUCLmjhKGCSDgLNCw0Y9rizY2iIfYerGw5FebPu9U8TKktg0guDr81q6/mns15W3sHl4cWxJpQ6G+AStup4XOg==;BlobEndpoint=https://vendlybrstorage.blob.core.windows.net/;QueueEndpoint=https://vendlybrstorage.queue.core.windows.net/;TableEndpoint=https://vendlybrstorage.table.core.windows.net/;FileEndpoint=https://vendlybrstorage.file.core.windows.net/;",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=vendlybrwin;AccountKey=WKA7Nb0+4JsnCEPMUGXIIDupJe9LV28hha1lhFSTJazcjJBlGKb2DVdfQwr1RLE7Y7OOX0P3ga4t+AStTwfDQw==;BlobEndpoint=https://vendlybrwin.blob.core.windows.net/;QueueEndpoint=https://vendlybrwin.queue.core.windows.net/;TableEndpoint=https://vendlybrwin.table.core.windows.net/;FileEndpoint=https://vendlybrwin.file.core.windows.net/;",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "Invironment": "TEST",
     "ConnectionStrings:AsmConnection": "Data Source=mssql2017.hostingzone.com.br;Initial Catalog=asmapp;User ID=manager;Password=qoe83i92;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False",

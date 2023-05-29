@@ -108,10 +108,6 @@ namespace ASM.Services
         public async Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, BillingStatus status, DateTime expireIn, DateTime lastPayment)
         {
             var billing = await unitOfWork.BillingInformationRepository.GetQueryable().Where(x => x.SellerId == sellerId).FirstOrDefaultAsync();
-            if (billing.ExpireIn > DateTime.UtcNow)
-            {
-                return null;
-            }
             if (billing == null)
             {
                 billing = new PaymentInformation
