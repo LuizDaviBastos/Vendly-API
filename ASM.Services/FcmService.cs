@@ -14,6 +14,26 @@ namespace ASM.Services
             this.settingsService = settingsService;
         }
 
+        public async Task SendNotificationForAllAsync(string title, string body)
+        {
+            var settings = await settingsService.GetAppSettingsAsync();
+            var tokens = await sellerService.GetAllFcmTokensAsync();
+            using (var sender = new Sender(settings.FcmServerKey ?? key))
+            {
+                var message = new Message
+                {
+                    RegistrationIds = new List<string>(tokens),
+                    Notification = new Notification
+                    {
+                        Title = title ?? "Test from FCM.Net",
+                        Body = body ??$"Hello World!{DateTime.Now.ToString()}"
+                    }
+                };
+                var result = await sender.SendAsync(message);
+            }
+        }
+
+
         public async Task SendNotificationAsync(string fcmToken, bool showForUsers = true)
         {
             var settings = await settingsService.GetAppSettingsAsync();

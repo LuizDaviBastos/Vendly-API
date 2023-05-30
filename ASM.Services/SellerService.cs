@@ -334,6 +334,17 @@ namespace ASM.Services
             return new();
         }
 
+        public async Task<List<string?>> GetAllFcmTokensAsync()
+        {
+            var result = await unitOfWork.SellerFcmTokenRepository.GetQueryable().Select(x => x.FcmToken).Distinct().ToListAsync();
+            if (result?.Any() ?? false)
+            {
+                return result.Where(x => !string.IsNullOrEmpty(x)).ToList() ?? new();
+            }
+
+            return new();
+        }
+
         public async Task<bool> ExpirateDateValid(long meliSellerId)
         {
             Guid? sellerId = await unitOfWork.MeliAccountRepository.GetQueryable()

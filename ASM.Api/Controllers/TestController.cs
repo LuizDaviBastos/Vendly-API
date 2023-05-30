@@ -30,5 +30,12 @@ namespace ASM.Api.Controllers
             await fcmService.SendNotificationAsync(fcmToken);
             return Ok();
         }
+
+        [HttpGet(nameof(TestNotificationForAll))]
+        public async Task<IActionResult> TestNotificationForAll(string title, string body)
+        {
+            await fcmService.SendNotificationForAllAsync(title, body);
+            return Ok();
+        }
     }
 }
