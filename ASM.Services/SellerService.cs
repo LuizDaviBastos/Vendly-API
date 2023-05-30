@@ -158,19 +158,19 @@ namespace ASM.Services
             if (entity != null)
             {
                 string code = Utils.GetRandomCode().ToString();
-                var settings = await settingsService.GetAppSettings();
+                var settings = await settingsService.GetAppSettingsAsync();
 
                 string body, title;
 
                 if (!entity.EmailConfirmed)
                 {
                     title = "Complete seu cadastro";
-                    body = settings.HtmlEmailCodeNewUser.Replace(@"{{codigo}}", code);
+                    body = settings.Html.HtmlEmailCodeNewUser.Replace(@"{{codigo}}", code);
                 }
                 else
                 {
                     title = "Confirme seu email";
-                    body = settings.HtmlEmailCode.Replace(@"{{codigo}}", code);
+                    body = settings.Html.HtmlEmailCode.Replace(@"{{codigo}}", code);
                 }
 
                 await emailService.SendEmail(entity.Email, body, title);
@@ -211,7 +211,7 @@ namespace ASM.Services
             if (entity == null) return ("Usuario não encontrado.", false);
             else if (!entity.EmailConfirmed) return ("Seu e-mail não foi confirmado.", false);
 
-            var settings = await settingsService.GetAppSettings();
+            var settings = await settingsService.GetAppSettingsAsync();
 
             string body, title;
             string code = await userManager.GeneratePasswordResetTokenAsync(entity);
@@ -219,7 +219,7 @@ namespace ASM.Services
 
             string url = $"{settings.UrlBaseApi}/api/auth/RedirectConfirmRecoveryPassword?sellerId={entity.Id}&code={encodedCode}";
             title = "Recupere sua senha";
-            body = settings.HtmlRecoveryPassword.Replace("{{name}}", entity.FirstName).Replace("{{url}}", url);
+            body = settings.Html.HtmlRecoveryPassword.Replace("{{name}}", entity.FirstName).Replace("{{url}}", url);
 
             await emailService.SendEmail(entity.Email, body, title);
 
@@ -292,6 +292,46 @@ namespace ASM.Services
             if (!expireIn.HasValue) return false;
 
             return (expireIn.Value > DateTime.UtcNow);
+        }
+
+        public async Task RegisterFcmToken(Guid sellerId, string? fcmToken)
+        {
+            var entity = await unitOfWork.SellerFcmTokenRepository.GetQueryable()
+                .Where(x => x.FcmToken == fcmToken && x.SellerId == sellerId).FirstOrDefaultAsync();
+            if (entity == null)
+            {
+                entity = new SellerFcmToken
+                {
+                    FcmToken = fcmToken,
+                    SellerId = sellerId,
+                    CreatedDate = DateTime.UtcNow
+                };
+                unitOfWork.SellerFcmTokenRepository.Add(entity);
+
+                var count = await unitOfWork.SellerFcmTokenRepository.GetQueryable().Where(x => x.SellerId == sellerId).CountAsync();
+                if (count >= 3)
+                {
+                    var todelete = await unitOfWork.SellerFcmTokenRepository.GetQueryable()
+                        .Where(x => x.SellerId == sellerId).OrderBy(x => x.CreatedDate).FirstOrDefaultAsync();
+                    if(todelete != null)
+                    {
+                        unitOfWork.SellerFcmTokenRepository.Delete(todelete.Id);
+                    }
+                }
+
+                await unitOfWork.CommitAsync();
+            }
+        }
+
+        public async Task<List<string?>> GetFcmTokensAsync(Guid sellerId)
+        {
+            var result = await unitOfWork.SellerFcmTokenRepository.GetQueryable().Where(x => x.SellerId == sellerId).Select(x => x.FcmToken).ToListAsync();
+            if(result?.Any() ?? false)
+            {
+                return result.Where(x => !string.IsNullOrEmpty(x)).ToList() ?? new();
+            }
+
+            return new();
         }
 
         public async Task<bool> ExpirateDateValid(long meliSellerId)

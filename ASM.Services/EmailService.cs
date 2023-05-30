@@ -17,7 +17,7 @@ namespace ASM.Services
 
         public async Task SendEmail(string to, string body, string subject)
         {
-            var settings = await settingsService.GetAppSettings();
+            var settings = await settingsService.GetAppSettingsAsync();
             smtpSettings = settings.SmtpSettings;
             var basicCredential = new NetworkCredential(smtpSettings.Email, smtpSettings.Password);
             MailAddress fromAddress = new MailAddress(smtpSettings.Email, smtpSettings.UserName);

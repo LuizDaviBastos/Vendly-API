@@ -16,6 +16,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.16.0" />
+		<PackageReference Include="FCM.Net.Core" Version="1.0.1" />
+		<PackageReference Include="Google.Apis.FirebaseCloudMessaging.v1" Version="1.60.0.3063" />
 		<PackageReference Include="Google.Cloud.Firestore" Version="3.3.0" />
 		<PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.15" />

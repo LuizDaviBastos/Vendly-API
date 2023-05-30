@@ -86,7 +86,7 @@ namespace ASM.Api.Controllers
         {
             try
             {
-                var result = await this.setingsService.GetAppSettings();
+                var result = await this.setingsService.GetAppSettingsAsync();
                 return Ok(result);
             }
             catch (System.Exception ex)

@@ -17,7 +17,7 @@ namespace ASM.Services
 
         public async Task<PaymentLinkResponse> CreatePayment(Guid sellerId)
         {
-            var settings = await settingsService.GetAppSettings();
+            var settings = await settingsService.GetAppSettingsAsync();
             var accessToken = settings.MePaToken;
             var response = new PaymentLinkResponse();
             response.Success = false;
@@ -65,7 +65,7 @@ namespace ASM.Services
             var response = new PaymentResponse();
             response.Success = false;
 
-            var settings = await settingsService.GetAppSettings();
+            var settings = await settingsService.GetAppSettingsAsync();
             var accessToken = settings.MePaToken;
 
             RestRequest request = new RestRequest($"/v1/payments/{paymentId}", Method.GET);

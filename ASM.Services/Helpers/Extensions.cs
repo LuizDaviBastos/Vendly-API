@@ -25,6 +25,7 @@ namespace ASM.Services.Helpers
             services.AddSingleton(x => configuration.Get<AsmConfiguration>());
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IMepaService, MepaService>();
+            services.AddScoped<FcmService>();
 
             var client = new MongoClient("mongodb+srv://luiz:80849903D@asmserveless.m1ukj.mongodb.net/?retryWrites=true&w=majority");
             services.AddSingleton(client.GetDatabase("ASMAPP"));

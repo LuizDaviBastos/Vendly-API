@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using ASM.Data.Common;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 
@@ -15,5 +16,6 @@ namespace ASM.Data.Entities
         public virtual IList<MeliAccount> MeliAccounts { get; set; }
         public virtual IList<SellerOrder> Orders { get; set; }
         public virtual IList<PaymentHistory> PaymentHistory { get; set; }
+        public virtual IList<SellerFcmToken> SellerFcmTokens { get; set; }
     }
 }

@@ -35,7 +35,7 @@ namespace ASM.Services
 
         public async Task<string> GetAuthUrl(string countryId, StateUrl? state)
         {
-            var settings = await this.settingsService.GetAppSettings();
+            var settings = await this.settingsService.GetAppSettingsAsync();
             string? redirectUrl = settings.RedirectUrl ?? asmConfiguration.RedirectUrl;
             string stateBase64 = string.Empty;
             if (state != null) stateBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(state)));
@@ -46,7 +46,7 @@ namespace ASM.Services
 
         public async Task<AccessToken> GetAccessTokenAsync(string code)
         {
-            var settings = await this.settingsService.GetAppSettings();
+            var settings = await this.settingsService.GetAppSettingsAsync();
             AccessToken accessToken = new AccessToken();
             accessToken.Success = false;
 

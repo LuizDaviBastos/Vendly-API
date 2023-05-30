@@ -1,5 +1,5 @@
 ﻿using ASM.Services.Interfaces;
-using ASM.Services.Models;
+using ASM.Services.Models.Settings;
 using Google.Cloud.Firestore;
 using MongoDB.Driver;
 
@@ -14,7 +14,7 @@ namespace ASM.Services
             this.fireStore = firebaseClient;
         }
 
-        public async Task<AsmAppSettings> GetAppSettings()
+        public async Task<AsmAppSettings> GetAppSettingsAsync()
         {
             AsmAppSettings response = new();
             var querySnapshot = await fireStore.Collection("settings").GetSnapshotAsync();

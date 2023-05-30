@@ -55,9 +55,14 @@ namespace ASM.Data
             .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Seller>()
-           .HasOne(e => e.BillingInformation)
-           .WithOne(e => e.Seller)
-           .OnDelete(DeleteBehavior.Cascade);
+            .HasMany(e => e.PaymentHistory)
+            .WithOne(e => e.Seller)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Seller>()
+            .HasMany(e => e.SellerFcmTokens)
+            .WithOne(e => e.Seller)
+            .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<MeliAccount>()
             .HasMany(e => e.Messages)

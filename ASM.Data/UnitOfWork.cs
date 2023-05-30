@@ -13,6 +13,7 @@ namespace ASM.Data
         private ISellerOrderRepository sellerOrderRepository;
         private IBillingInformationRepository billingInformationRepository;
         private IPaymentHistoryRepository paymentHistoryRepository;
+        private ISellerFcmTokenRepository sellerFcmTokenRepository;
 
         public UnitOfWork(AsmContext asmContext)
         {
@@ -70,6 +71,15 @@ namespace ASM.Data
             {
                 if (paymentHistoryRepository == null) paymentHistoryRepository = new PaymentHistoryRepository(asmContext);
                 return paymentHistoryRepository;
+            }
+        }
+
+        public ISellerFcmTokenRepository SellerFcmTokenRepository 
+        {
+            get
+            {
+                if (sellerFcmTokenRepository == null) sellerFcmTokenRepository = new SellerFcmTokenRepository(asmContext);
+                return sellerFcmTokenRepository;
             }
         }
 

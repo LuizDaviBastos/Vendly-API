@@ -1,9 +1,9 @@
-﻿using ASM.Services.Models;
+﻿using ASM.Services.Models.Settings;
 
 namespace ASM.Services.Interfaces
 {
     public interface ISettingsService
     {
-        public Task<AsmAppSettings> GetAppSettings();
+        public Task<AsmAppSettings> GetAppSettingsAsync();
     }
 }

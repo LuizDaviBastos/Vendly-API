@@ -4,6 +4,7 @@ using ASM.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASM.Data.Migrations
 {
     [DbContext(typeof(AsmContext))]
-    partial class AsmContextModelSnapshot : ModelSnapshot
+    [Migration("20230529215308_fcmtoken")]
+    partial class fcmtoken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -150,6 +152,9 @@ namespace ASM.Data.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("FcmToken")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -191,28 +196,6 @@ namespace ASM.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Sellers");
-                });
-
-            modelBuilder.Entity("ASM.Data.Entities.SellerFcmToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FcmToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("SellerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SellerId");
-
-                    b.ToTable("SellerFcmToken");
                 });
 
             modelBuilder.Entity("ASM.Data.Entities.SellerMessage", b =>
@@ -316,17 +299,6 @@ namespace ASM.Data.Migrations
                     b.Navigation("Seller");
                 });
 
-            modelBuilder.Entity("ASM.Data.Entities.SellerFcmToken", b =>
-                {
-                    b.HasOne("ASM.Data.Entities.Seller", "Seller")
-                        .WithMany("SellerFcmTokens")
-                        .HasForeignKey("SellerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Seller");
-                });
-
             modelBuilder.Entity("ASM.Data.Entities.SellerMessage", b =>
                 {
                     b.HasOne("ASM.Data.Entities.MeliAccount", "MeliAccount")
@@ -364,8 +336,6 @@ namespace ASM.Data.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("PaymentHistory");
-
-                    b.Navigation("SellerFcmTokens");
                 });
 
             modelBuilder.Entity("ASM.Data.Entities.SellerMessage", b =>

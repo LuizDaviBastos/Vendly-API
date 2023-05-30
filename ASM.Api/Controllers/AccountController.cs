@@ -102,5 +102,19 @@ namespace ASM.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("fcmToken")]
+        public async Task<IActionResult> FcmToken([FromBody] RegisterFcmToken fcmToken)
+        {
+            try
+            {
+                await sellerService.RegisterFcmToken(fcmToken.SellerId, fcmToken.FcmToken);
+                return Ok(RequestResponse.GetSuccess());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

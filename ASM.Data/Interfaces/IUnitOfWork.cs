@@ -10,6 +10,7 @@ namespace ASM.Data.Interfaces
         public ISellerOrderRepository SellerOrderRepository { get; }
         public IBillingInformationRepository BillingInformationRepository { get; }
         public IPaymentHistoryRepository PaymentHistoryRepository { get; }
+        public ISellerFcmTokenRepository SellerFcmTokenRepository { get; }
 
         public void Commit();
         public Task CommitAsync();

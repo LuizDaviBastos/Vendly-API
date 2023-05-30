@@ -25,5 +25,7 @@ namespace ASM.Services.Interfaces
         public Task<PaymentHistory> AddPaymentHistory(Guid sellerId, double? price, DateTime createdDate, string metaData = null);
         public Task<bool> ExpirateDateValid(Guid sellerId);
         public Task<bool> ExpirateDateValid(long meliSellerId);
+        public Task RegisterFcmToken(Guid sellerId, string? fcmToken);
+        public Task<List<string?>> GetFcmTokensAsync(Guid sellerId);
     }
 }

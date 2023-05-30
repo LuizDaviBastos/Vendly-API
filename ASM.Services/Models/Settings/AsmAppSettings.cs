@@ -1,10 +1,9 @@
-﻿using ASM.Services.Models.Settings;
-using Google.Cloud.Firestore;
+﻿using Google.Cloud.Firestore;
 
-namespace ASM.Services.Models
+namespace ASM.Services.Models.Settings
 {
     [FirestoreData]
-    public class AsmAppSettings 
+    public class AsmAppSettings
     {
         [FirestoreProperty(Name = "urlBaseApi")]
         public string? UrlBaseApi { get; set; }
@@ -18,19 +17,16 @@ namespace ASM.Services.Models
         [FirestoreProperty(Name = "smtpSettings")]
         public SmtpSettings? SmtpSettings { get; set; }
 
-        [FirestoreProperty(Name = "htmlEmailCodeNewUser")]
-        public string? HtmlEmailCodeNewUser { get; set; }
-
-        [FirestoreProperty(Name = "htmlEmailCode")]
-        public string? HtmlEmailCode { get; set; }
-
-        [FirestoreProperty(Name = "htmlRecoveryPassword")]
-        public string? HtmlRecoveryPassword { get; set; }
+        [FirestoreProperty(Name = "Html")]
+        public Html? Html { get; set; }
 
         [FirestoreProperty(Name = "VendlyItem")]
         public VendlyItem? VendlyItem { get; set; }
 
         [FirestoreProperty(Name = "MePaToken")]
         public string? MePaToken { get; set; }
+
+        [FirestoreProperty(Name = "FcmServerKey")]
+        public string? FcmServerKey { get; set; }
     }
 }

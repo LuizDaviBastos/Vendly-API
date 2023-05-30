@@ -1,4 +1,5 @@
 using ASM.Data.Enums;
+using ASM.Services;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Microsoft.Azure.WebJobs;
@@ -15,13 +16,15 @@ namespace ASM.PreFunction.Functions
         private readonly IMeliService meliService;
         private readonly IMepaService mepaService;
         private readonly ISellerService sellerService;
+        private readonly FcmService fcmService;
 
-        public ProcessPayments(IStorageService storageService, IMeliService meliService, ISellerService sellerService, IMepaService mepaService)
+        public ProcessPayments(IStorageService storageService, IMeliService meliService, ISellerService sellerService, IMepaService mepaService, FcmService fcmService)
         {
             this.storageService = storageService;
             this.meliService = meliService;
             this.sellerService = sellerService;
             this.mepaService = mepaService;
+            this.fcmService = fcmService;
         }
 
         [FunctionName("ProcessPayments")]
@@ -66,7 +69,8 @@ namespace ASM.PreFunction.Functions
                     var billing = await sellerService.UpdateBillingInformation(seller.Id, BillingStatus.Active, expireIn, lastPayment);
                     double? price = paymentInformations.transaction_amount;
                     DateTime createdDate = paymentInformations.date_created?.ToUniversalTime() ?? DateTime.UtcNow;
-                    await sellerService.AddPaymentHistory(sellerId.Value, price, createdDate); //TODO add payment history
+                    await sellerService.AddPaymentHistory(sellerId.Value, price, createdDate);
+                    await fcmService.SendNotificationAsync(sellerId.Value, "Vendly", "Recebemos seu pagamento. Obrigado!");
                 }
             }
         }
