@@ -28,5 +28,6 @@ namespace ASM.Services.Interfaces
         public Task RegisterFcmToken(Guid sellerId, string? fcmToken);
         public Task<List<string?>> GetFcmTokensAsync(Guid sellerId);
         public Task<List<string?>> GetAllFcmTokensAsync();
+        public Task<PaymentInformation?> GetPaymentInformation(Guid sellerId);
     }
 }

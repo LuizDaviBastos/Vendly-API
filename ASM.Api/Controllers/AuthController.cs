@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 namespace ASM.Api.Controllers
 {
     [Route("api/[controller]")]
+    [Route("[controller]")]
     public class AuthController : Controller
     {
         private readonly IMeliService meliService;
@@ -310,5 +311,18 @@ namespace ASM.Api.Controllers
 
             return new() { Success = false, Message = "Usuario ou senha inválido" };
         }
+    }
+}
+
+[Route("sync")]
+public class SyncController : Controller
+{
+    [HttpGet]
+    [Route("")]
+    public IActionResult Sync(string code, string? state)
+    
+    
+    {
+        return RedirectToAction("SyncMeliAccount", "Auth", new { code, state });
     }
 }

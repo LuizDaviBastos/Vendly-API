@@ -173,7 +173,7 @@ namespace ASM.Services
                     body = settings.Html.HtmlEmailCode.Replace(@"{{codigo}}", code);
                 }
 
-                await emailService.SendEmail(entity.Email, body, title);
+                await emailService.SendEmailMsGraph(entity.Email, body, title);
 
                 entity.ConfirmationCode = code;
                 unitOfWork.SellerRepository.Update(entity);
@@ -221,7 +221,7 @@ namespace ASM.Services
             title = "Recupere sua senha";
             body = settings.Html.HtmlRecoveryPassword.Replace("{{name}}", entity.FirstName).Replace("{{url}}", url);
 
-            await emailService.SendEmail(entity.Email, body, title);
+            await emailService.SendEmailMsGraph(entity.Email, body, title);
 
             return ("", true);
         }
@@ -292,6 +292,11 @@ namespace ASM.Services
             if (!expireIn.HasValue) return false;
 
             return (expireIn.Value > DateTime.UtcNow);
+        }
+
+        public async Task<PaymentInformation?> GetPaymentInformation(Guid sellerId)
+        {
+            return await unitOfWork.BillingInformationRepository.GetQueryable().Where(x => x.SellerId == sellerId).FirstOrDefaultAsync();
         }
 
         public async Task RegisterFcmToken(Guid sellerId, string? fcmToken)

@@ -1,11 +1,6 @@
 ﻿using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.IO;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace ASM.Api.Controllers

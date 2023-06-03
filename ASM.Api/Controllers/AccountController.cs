@@ -1,9 +1,12 @@
 ﻿using ASM.Api.Models;
+using ASM.Services;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using Google.Type;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace ASM.Api.Controllers
@@ -16,12 +19,14 @@ namespace ASM.Api.Controllers
         private readonly IMeliService meliService;
         private readonly ISellerService sellerService;
         private readonly IMepaService mepaService;
+        private readonly ISettingsService settingsService;
 
-        public AccountController(IMeliService meliService, ISellerService sellerService, IMepaService mepaService)
+        public AccountController(IMeliService meliService, ISellerService sellerService, IMepaService mepaService, ISettingsService settingsService)
         {
             this.meliService = meliService;
             this.sellerService = sellerService;
             this.mepaService = mepaService;
+            this.settingsService = settingsService;
         }
 
         [HttpGet("GetSellerInfo")]
@@ -75,7 +80,7 @@ namespace ASM.Api.Controllers
         {
             try
             {
-                var createResponse = await mepaService.CreatePayment(sellerId);
+                var createResponse = await mepaService.CreatePreference(sellerId);
                 if (!createResponse.Success ?? true)
                 {
                     return Ok(RequestResponse.GetError(createResponse.Message));
@@ -110,6 +115,36 @@ namespace ASM.Api.Controllers
             {
                 await sellerService.RegisterFcmToken(fcmToken.SellerId, fcmToken.FcmToken);
                 return Ok(RequestResponse.GetSuccess());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetPaymentInformations")]
+        public async Task<IActionResult> GetPaymentInformations(Guid sellerId)
+        {
+            try
+            {
+                var pInfo = await sellerService.GetPaymentInformation(sellerId);
+                if (pInfo == null || !pInfo.ExpireIn.HasValue) return Ok(RequestResponse.GetError("Informações da assinatura não encontradas."));
+
+                PaymentInformationResult response  = new PaymentInformationResult
+                {
+                    ExpireIn = pInfo.ExpireIn.Value,
+                    Id = pInfo.Id,
+                    LastPayment = pInfo.LastPayment,
+                    SellerId = sellerId,
+                    Status = pInfo.Status
+                };
+
+                var settings = await settingsService.GetAppSettingsAsync();
+                response.Price = settings?.VendlyItem?.Price;
+
+                response.ExpireInFormatted = pInfo.ExpireIn.Value.ToString("dd 'de' MMMM 'de' yyyy", new CultureInfo("pt-BR"));
+                if (pInfo.LastPayment.HasValue) response.LastPaymentFormatted = pInfo.LastPayment.Value.ToString("dd 'de' MMMM 'de' yyyy", new CultureInfo("pt-BR"));
+                return Ok(RequestResponse.GetSuccess(response));
             }
             catch (Exception ex)
             {

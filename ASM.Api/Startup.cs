@@ -42,6 +42,7 @@ namespace ASM.Api
                 options.Password.RequireDigit = true;
                 options.Password.RequiredLength = 8;
                 options.User.RequireUniqueEmail = true;
+                options.Password.RequireLowercase = false;
                 options.SignIn.RequireConfirmedEmail = true;
                 options.Password.RequireNonAlphanumeric = true;
                 /*
@@ -102,7 +103,7 @@ namespace ASM.Api
             }
             else
             {
-                
+
                 app.UseExceptionHandler("/Error");
 
                 app.UseHsts();
@@ -119,8 +120,10 @@ namespace ASM.Api
 
             app.UseAuthentication();
             app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
+
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller}/{action=Index}/{id?}");

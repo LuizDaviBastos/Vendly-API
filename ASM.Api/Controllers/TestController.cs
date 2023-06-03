@@ -1,4 +1,5 @@
 ﻿using ASM.Services;
+using ASM.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -11,11 +12,15 @@ namespace ASM.Api.Controllers
     {
         private readonly IConfiguration configuration;
         private readonly FcmService fcmService;
+        private readonly IMepaService mepaService;
+        private readonly ISellerService sellerService;
 
-        public TestController(IConfiguration configuration, FcmService fcmService)
+        public TestController(IConfiguration configuration, FcmService fcmService, IMepaService mepaService, ISellerService sellerService)
         {
             this.configuration = configuration;
             this.fcmService = fcmService;
+            this.mepaService = mepaService;
+            this.sellerService = sellerService;
         }
 
         [HttpGet(nameof(GetLocalConfiguration))]
@@ -35,6 +40,20 @@ namespace ASM.Api.Controllers
         public async Task<IActionResult> TestNotificationForAll(string title, string body)
         {
             await fcmService.SendNotificationForAllAsync(title, body);
+            return Ok();
+        }
+
+        [HttpGet(nameof(CreatePreference))]
+        public async Task<IActionResult> CreatePreference(Guid sellerId)
+        {
+            var response = await mepaService.CreatePreference(sellerId);
+            return Ok(response);
+        }
+
+        [HttpGet(nameof(GetPayment))]
+        public async Task<IActionResult> GetPayment(Guid sellerId)
+        {
+           //var result = mepaService.GetPreference(sellerId);
             return Ok();
         }
     }

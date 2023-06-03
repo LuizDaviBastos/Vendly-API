@@ -20,5 +20,24 @@ namespace ASM.Services.Models.Settings
 
         [FirestoreProperty(Name = "Email")]
         public string? Email { get; set; }
+
+        [FirestoreProperty(Name = "Name")]
+        public string? Name { get; set; }
+
+        [FirestoreProperty(Name = "MicrosoftGraph")]
+        public MicrosoftGraph MicrosoftGraph { get; set; }
+    }
+
+    [FirestoreData]
+    public class MicrosoftGraph
+    {
+        [FirestoreProperty(Name = "TenantId")]
+        public string? TenantId { get; set; }
+
+        [FirestoreProperty(Name = "ClientId")]
+        public string? ClientId { get; set; }
+
+        [FirestoreProperty(Name = "ClientSecret")]
+        public string? ClientSecret { get; set; }
     }
 }

@@ -1,5 +1,8 @@
 ﻿using ASM.Services.Interfaces;
 using ASM.Services.Models.Mepa;
+using MercadoPago.Client.Payment;
+using MercadoPago.Client.Preference;
+using MercadoPago.Config;
 using RestSharp;
 
 namespace ASM.Services
@@ -12,10 +15,55 @@ namespace ASM.Services
         public MepaService(ISettingsService settingsService)
         {
             restClient = new RestClient("https://api.mercadopago.com");
-            this.settingsService = settingsService; 
+            this.settingsService = settingsService;
         }
 
-        public async Task<PaymentLinkResponse> CreatePayment(Guid sellerId)
+        public async Task<PaymentLinkResponse> CreatePreferenceSdk(Guid sellerId)
+        {
+            PaymentLinkResponse response = new();
+            var settings = await settingsService.GetAppSettingsAsync();
+            MercadoPagoConfig.AccessToken = settings.MePaToken;
+
+            var request = new PreferenceRequest
+            {
+                ExternalReference = sellerId.ToString(),
+                Items = new List<PreferenceItemRequest>
+                {
+                    new PreferenceItemRequest
+                    {
+                        Title = settings?.VendlyItem?.Title ?? "Vendly Plano Mensal",
+                        Quantity = 1,
+                        CurrencyId = "BRL",
+                        UnitPrice = 39.90M
+                    },
+                },
+                Metadata = new Dictionary<string, object> { { "sellerId", sellerId } }
+            };
+
+
+            var client = new PreferenceClient();
+            var preference = await client.CreateAsync(request);
+            response.init_point = preference.InitPoint;
+            response.price = settings?.VendlyItem?.Price ?? 39.90;
+
+            return response;
+        }
+
+        public async Task<PaymentLinkResponse> GetPreference(string preferenceId)
+        {
+            PaymentLinkResponse response = new();
+            var settings = await settingsService.GetAppSettingsAsync();
+            MercadoPagoConfig.AccessToken = settings.MePaToken;
+
+            var client = new PreferenceClient();
+            var preference = await client.GetAsync(preferenceId);
+            response.init_point = preference.InitPoint;
+            response.price = settings?.VendlyItem?.Price ?? 39.90;
+
+            return response;
+        }
+
+        public async Task<PaymentLinkResponse> CreatePreference(Guid sellerId)
         {
             var settings = await settingsService.GetAppSettingsAsync();
             var accessToken = settings.MePaToken;
@@ -27,6 +75,7 @@ namespace ASM.Services
 
             var body = new PaymentLinkParams
             {
+                ExternalReference = sellerId.ToString(),
                 Items = new List<PaymentItem>
                 {
                     new PaymentItem
@@ -50,6 +99,7 @@ namespace ASM.Services
             {
                 response = result.Data;
                 response.Success = true;
+                response.price = settings?.VendlyItem?.Price ?? 39.90;
             }
             else
             {
