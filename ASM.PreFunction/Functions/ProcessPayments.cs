@@ -54,7 +54,7 @@ namespace ASM.PreFunction.Functions
                         return;
                     }
 
-                    var status = await sellerService.ExpirateDateValid(sellerId.Value);
+                    var status = await sellerService.ExpirateDateValid(sellerId.Value, false);
                     if (status) return;
 
                     var seller = await sellerService.GetSellerOnly(sellerId.Value);
@@ -65,12 +65,10 @@ namespace ASM.PreFunction.Functions
                     }
 
                     var lastPayment = paymentInformations.date_approved?.ToUniversalTime() ?? DateTime.UtcNow;
-                    var expireIn = DateTime.UtcNow.AddMonths(1);
-                    var billing = await sellerService.UpdateBillingInformation(seller.Id, BillingStatus.Active, expireIn, lastPayment);
+                    DateTime? createdDate = paymentInformations.date_created;
                     double? price = paymentInformations.transaction_amount;
-                    DateTime createdDate = paymentInformations.date_created?.ToUniversalTime() ?? DateTime.UtcNow;
-                    await sellerService.AddPaymentHistory(sellerId.Value, price, createdDate);
-                    await fcmService.SendNotificationAsync(sellerId.Value, "Vendly", "Recebemos seu pagamento. Obrigado!");
+
+                    await sellerService.SubscribeAgainRoutineAsync(sellerId.Value, lastPayment, createdDate, price);
                 }
             }
         }

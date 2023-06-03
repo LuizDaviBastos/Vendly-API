@@ -3,6 +3,7 @@ using ASM.Services.Models.Mepa;
 using MercadoPago.Client.Payment;
 using MercadoPago.Client.Preference;
 using MercadoPago.Config;
+using MercadoPago.Resource;
 using RestSharp;
 
 namespace ASM.Services
@@ -49,6 +50,27 @@ namespace ASM.Services
             return response;
         }
 
+        public async Task<ResultsResourcesPage<MercadoPago.Resource.Payment.Payment>> GetLastPayments(Guid sellerId, int limit = 3)
+        {
+            PaymentLinkResponse response = new();
+            var settings = await settingsService.GetAppSettingsAsync();
+            MercadoPagoConfig.AccessToken = settings.MePaToken;
+
+            var client = new PaymentClient();
+            var paymentResponse = await client.SearchAsync(new MercadoPago.Client.SearchRequest
+            {
+                Filters = new Dictionary<string, object>
+                {
+                    { "sort", "date_created" },
+                    { "criteria", "desc" },
+                    { "external_reference",  sellerId.ToString() }
+                },
+                Limit = limit,
+            });
+            
+            return paymentResponse;
+        }
+
         public async Task<PaymentLinkResponse> GetPreference(string preferenceId)
         {
             PaymentLinkResponse response = new();
@@ -75,7 +97,7 @@ namespace ASM.Services
 
             var body = new PaymentLinkParams
             {
-                ExternalReference = sellerId.ToString(),
+                external_reference = sellerId.ToString(),
                 Items = new List<PaymentItem>
                 {
                     new PaymentItem

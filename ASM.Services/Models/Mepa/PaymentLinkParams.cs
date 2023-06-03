@@ -4,7 +4,7 @@
     {
         public List<PaymentItem> Items { get; set; }
         public Metadata Metadata { get; set; }
-        public string ExternalReference { get; set; }
+        public string external_reference { get; set; }
     }
 
 

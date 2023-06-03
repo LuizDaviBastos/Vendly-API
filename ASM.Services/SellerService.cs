@@ -5,8 +5,12 @@ using ASM.Services.Helpers;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using ASM.Services.Models.Constants;
+using ASM.Services.Models.Mepa;
+using FCM.Net;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Graph.Drives.Item.Items.Item.Workbook.Worksheets.Item.Charts.Item.Axes.CategoryAxis.Title;
+using MongoDB.Driver.Core.Servers;
 
 namespace ASM.Services
 {
@@ -16,13 +20,17 @@ namespace ASM.Services
         private readonly IEmailService emailService;
         private readonly ISettingsService settingsService;
         private readonly UserManager<Seller> userManager;
+        private readonly IMepaService mepaService;
+        private readonly FcmService fcmService;
 
-        public SellerService(IUnitOfWork unitOfWork, IEmailService emailService, ISettingsService settingsService, UserManager<Seller> userManager)
+        public SellerService(IUnitOfWork unitOfWork, IEmailService emailService, ISettingsService settingsService, UserManager<Seller> userManager, IMepaService mepaService, FcmService fcmService)
         {
             this.unitOfWork = unitOfWork;
             this.emailService = emailService;
             this.settingsService = settingsService;
             this.userManager = userManager;
+            this.mepaService = mepaService;
+            this.fcmService = fcmService;
         }
 
         public async Task<(string, bool)> SaveAccount(Seller seller)
@@ -211,7 +219,7 @@ namespace ASM.Services
             string url = $"{settings.UrlBaseApi}/api/auth/RedirectConfirmRecoveryPassword?sellerId={entity.Id}&code={encodedCode}";
             title = "Recupere sua senha";
 
-            await emailService.SendEmail(entity.Email, title, HtmlTemplates.EmailRecoveryPassword, new Dictionary<string, string> { { "url", url }, { "name", entity.FirstName } } );
+            await emailService.SendEmail(entity.Email, title, HtmlTemplates.EmailRecoveryPassword, new Dictionary<string, string> { { "url", url }, { "name", entity.FirstName } });
 
             return ("", true);
         }
@@ -275,13 +283,36 @@ namespace ASM.Services
             return order;
         }
 
-        public async Task<bool> ExpirateDateValid(Guid sellerId)
+        public async Task<bool> ExpirateDateValid(Guid sellerId, bool searchPayment = true)
         {
             var expireIn = await unitOfWork.BillingInformationRepository.GetQueryable()
                 .Where(x => x.SellerId == sellerId).Select(x => x.ExpireIn).FirstOrDefaultAsync();
             if (!expireIn.HasValue) return false;
 
-            return (expireIn.Value > DateTime.UtcNow);
+            var notExpirated = (expireIn.Value > DateTime.UtcNow);
+            if (!notExpirated && searchPayment)
+            {
+                var payments = await mepaService.GetLastPayments(sellerId);
+                var paid = payments.Results.FirstOrDefault(x => x.DateApproved > expireIn.Value);
+                if (paid != null && (paid.Status == "approved" || paid.Status == "authorized"))
+                {
+                    await SubscribeAgainRoutineAsync(sellerId, paid.DateApproved, paid.DateCreated, decimal.ToDouble(paid.TransactionAmount ?? 0));
+                    return true;
+                }
+            }
+
+            return notExpirated;
+        }
+
+        public async Task<bool> ExpirateDateValid(long meliSellerId, bool searchPayment = true)
+        {
+            Guid? sellerId = await unitOfWork.MeliAccountRepository.GetQueryable()
+                .Where(x => x.MeliSellerId == meliSellerId).Include(x => x.Seller)
+                .Select(x => x.Seller.Id)
+                .FirstOrDefaultAsync();
+            if (!sellerId.HasValue) return false;
+
+            return await ExpirateDateValid(sellerId.Value, searchPayment);
         }
 
         public async Task<PaymentInformation?> GetPaymentInformation(Guid sellerId)
@@ -308,7 +339,7 @@ namespace ASM.Services
                 {
                     var todelete = await unitOfWork.SellerFcmTokenRepository.GetQueryable()
                         .Where(x => x.SellerId == sellerId).OrderBy(x => x.CreatedDate).FirstOrDefaultAsync();
-                    if(todelete != null)
+                    if (todelete != null)
                     {
                         unitOfWork.SellerFcmTokenRepository.Delete(todelete.Id);
                     }
@@ -318,37 +349,10 @@ namespace ASM.Services
             }
         }
 
-        public async Task<List<string?>> GetFcmTokensAsync(Guid sellerId)
+        public async Task SendPushNotificationAsync(Guid sellerId, string title, string body, Priority priority = Priority.Normal)
         {
-            var result = await unitOfWork.SellerFcmTokenRepository.GetQueryable().Where(x => x.SellerId == sellerId).Select(x => x.FcmToken).ToListAsync();
-            if(result?.Any() ?? false)
-            {
-                return result.Where(x => !string.IsNullOrEmpty(x)).ToList() ?? new();
-            }
-
-            return new();
-        }
-
-        public async Task<List<string?>> GetAllFcmTokensAsync()
-        {
-            var result = await unitOfWork.SellerFcmTokenRepository.GetQueryable().Select(x => x.FcmToken).Distinct().ToListAsync();
-            if (result?.Any() ?? false)
-            {
-                return result.Where(x => !string.IsNullOrEmpty(x)).ToList() ?? new();
-            }
-
-            return new();
-        }
-
-        public async Task<bool> ExpirateDateValid(long meliSellerId)
-        {
-            Guid? sellerId = await unitOfWork.MeliAccountRepository.GetQueryable()
-                .Where(x => x.MeliSellerId == meliSellerId).Include(x => x.Seller)
-                .Select(x => x.Seller.Id)
-                .FirstOrDefaultAsync();
-            if (!sellerId.HasValue) return false;
-
-            return await ExpirateDateValid(sellerId.Value);
+            var tokens = await unitOfWork.SellerFcmTokenRepository.GetTokens(sellerId);
+            await fcmService.SendPushNotificationAsync(tokens, title, body, priority);
         }
 
         private void UpdateMessageStatus(SellerOrder order, MessageType type, bool status)
@@ -373,6 +377,17 @@ namespace ASM.Services
         {
             unitOfWork.SellerRepository.Delete(user.Id);
             await unitOfWork.CommitAsync();
+        }
+
+        public async Task SubscribeAgainRoutineAsync(Guid sellerId, DateTime? dateApproved, DateTime? dateCreated, double? price)
+        {
+            var lastPayment = dateApproved?.ToUniversalTime() ?? DateTime.UtcNow;
+            var newExpireIn = DateTime.UtcNow.AddMonths(1);
+            DateTime createdDate = dateCreated?.ToUniversalTime() ?? DateTime.UtcNow;
+
+            await UpdateBillingInformation(sellerId, BillingStatus.Active, newExpireIn, lastPayment);
+            await AddPaymentHistory(sellerId, price, createdDate);
+            await SendPushNotificationAsync(sellerId, "Vendly", "Recebemos seu pagamento. Obrigado!");
         }
     }
 }

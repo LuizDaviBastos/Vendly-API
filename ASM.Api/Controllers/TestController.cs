@@ -3,7 +3,6 @@ using ASM.Services.Interfaces;
 using ASM.Services.Models.Constants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Graph.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -38,14 +37,7 @@ namespace ASM.Api.Controllers
         [HttpGet(nameof(TestNotification))]
         public async Task<IActionResult> TestNotification(string fcmToken)
         {
-            await fcmService.SendNotificationAsync(fcmToken);
-            return Ok();
-        }
-
-        [HttpGet(nameof(TestNotificationForAll))]
-        public async Task<IActionResult> TestNotificationForAll(string title, string body)
-        {
-            await fcmService.SendNotificationForAllAsync(title, body);
+            await fcmService.SendPushNotificationAsync(new List<string> { fcmToken }, "Test", "Test Body");
             return Ok();
         }
 
@@ -59,8 +51,8 @@ namespace ASM.Api.Controllers
         [HttpGet(nameof(GetPayment))]
         public async Task<IActionResult> GetPayment(Guid sellerId)
         {
-           //var result = mepaService.GetPreference(sellerId);
-            return Ok();
+            var result = await mepaService.GetLastPayments(sellerId);
+            return Ok(result);
         }
 
         [HttpGet(nameof(SendEmail))]

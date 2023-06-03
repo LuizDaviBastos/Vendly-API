@@ -1,6 +1,7 @@
 ﻿using ASM.Data.Entities;
 using ASM.Data.Enums;
 using ASM.Services.Models;
+using FCM.Net;
 
 namespace ASM.Services.Interfaces
 {
@@ -23,11 +24,11 @@ namespace ASM.Services.Interfaces
         public Task<Seller?> GetSellerOnly(Guid sellerId);
         public Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, BillingStatus status, DateTime expireIn, DateTime lastPayment);
         public Task<PaymentHistory> AddPaymentHistory(Guid sellerId, double? price, DateTime createdDate, string metaData = null);
-        public Task<bool> ExpirateDateValid(Guid sellerId);
-        public Task<bool> ExpirateDateValid(long meliSellerId);
+        public Task<bool> ExpirateDateValid(Guid sellerId, bool searchPayment = true);
+        public Task<bool> ExpirateDateValid(long meliSellerId, bool searchPayment = true);
         public Task RegisterFcmToken(Guid sellerId, string? fcmToken);
-        public Task<List<string?>> GetFcmTokensAsync(Guid sellerId);
-        public Task<List<string?>> GetAllFcmTokensAsync();
         public Task<PaymentInformation?> GetPaymentInformation(Guid sellerId);
+        public Task SendPushNotificationAsync(Guid sellerId, string title, string body, Priority priority = Priority.Normal);
+        public Task SubscribeAgainRoutineAsync(Guid sellerId, DateTime? dateApproved, DateTime? dateCreated, double? price);
     }
 }
