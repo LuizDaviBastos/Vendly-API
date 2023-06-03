@@ -1,8 +1,11 @@
 ﻿using ASM.Services;
 using ASM.Services.Interfaces;
+using ASM.Services.Models.Constants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Graph.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ASM.Api.Controllers
@@ -14,13 +17,16 @@ namespace ASM.Api.Controllers
         private readonly FcmService fcmService;
         private readonly IMepaService mepaService;
         private readonly ISellerService sellerService;
+        private readonly IEmailService emailService;
 
-        public TestController(IConfiguration configuration, FcmService fcmService, IMepaService mepaService, ISellerService sellerService)
+
+        public TestController(IConfiguration configuration, FcmService fcmService, IMepaService mepaService, ISellerService sellerService, IEmailService emailService)
         {
             this.configuration = configuration;
             this.fcmService = fcmService;
             this.mepaService = mepaService;
             this.sellerService = sellerService;
+            this.emailService = emailService;
         }
 
         [HttpGet(nameof(GetLocalConfiguration))]
@@ -54,6 +60,13 @@ namespace ASM.Api.Controllers
         public async Task<IActionResult> GetPayment(Guid sellerId)
         {
            //var result = mepaService.GetPreference(sellerId);
+            return Ok();
+        }
+
+        [HttpGet(nameof(SendEmail))]
+        public async Task<IActionResult> SendEmail(string to, string? url)
+        {
+            await emailService.SendEmail(to, "Vendly - Test", HtmlTemplates.EmailRecoveryPassword, new Dictionary<string, string> { { "url", url ?? "https://facebook.com" } });
             return Ok();
         }
     }

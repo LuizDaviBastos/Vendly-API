@@ -99,6 +99,9 @@ namespace ASM.Api
             AsmContext.Migrate(Configuration.GetConnectionString("AsmConnection"));
             if (env.IsDevelopment())
             {
+                app.UseSwaggerUI();
+                app.UseSwagger();
+
                 app.UseDeveloperExceptionPage();
             }
             else
@@ -108,9 +111,6 @@ namespace ASM.Api
 
                 app.UseHsts();
             }
-
-            app.UseSwaggerUI();
-            app.UseSwagger();
 
             //app.UseHttpsRedirection();
             app.UseStaticFiles();

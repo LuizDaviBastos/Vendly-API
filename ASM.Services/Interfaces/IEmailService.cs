@@ -2,7 +2,8 @@
 {
     public interface IEmailService
     {
-        public Task SendEmail(string to, string body, string subject);
+        public Task SendEmailSMTP(string to, string body, string subject);
         public Task SendEmailMsGraph(string to, string body, string subject);
+        public Task SendEmail(string to, string subject, string templateName, Dictionary<string, string> @params);
     }
 }

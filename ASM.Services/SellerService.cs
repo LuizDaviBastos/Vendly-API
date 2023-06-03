@@ -4,6 +4,7 @@ using ASM.Data.Interfaces;
 using ASM.Services.Helpers;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using ASM.Services.Models.Constants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -158,22 +159,12 @@ namespace ASM.Services
             if (entity != null)
             {
                 string code = Utils.GetRandomCode().ToString();
-                var settings = await settingsService.GetAppSettingsAsync();
+                string title;
 
-                string body, title;
+                if (!entity.EmailConfirmed) title = "Complete seu cadastro";
+                else title = "Confirme seu email";
 
-                if (!entity.EmailConfirmed)
-                {
-                    title = "Complete seu cadastro";
-                    body = settings.Html.HtmlEmailCodeNewUser.Replace(@"{{codigo}}", code);
-                }
-                else
-                {
-                    title = "Confirme seu email";
-                    body = settings.Html.HtmlEmailCode.Replace(@"{{codigo}}", code);
-                }
-
-                await emailService.SendEmailMsGraph(entity.Email, body, title);
+                await emailService.SendEmail(entity.Email, title, HtmlTemplates.EmailConfirmation, new Dictionary<string, string> { { "code", code } });
 
                 entity.ConfirmationCode = code;
                 unitOfWork.SellerRepository.Update(entity);
@@ -213,15 +204,14 @@ namespace ASM.Services
 
             var settings = await settingsService.GetAppSettingsAsync();
 
-            string body, title;
+            string title;
             string code = await userManager.GeneratePasswordResetTokenAsync(entity);
             string encodedCode = Utils.GetBase64String(code);
 
             string url = $"{settings.UrlBaseApi}/api/auth/RedirectConfirmRecoveryPassword?sellerId={entity.Id}&code={encodedCode}";
             title = "Recupere sua senha";
-            body = settings.Html.HtmlRecoveryPassword.Replace("{{name}}", entity.FirstName).Replace("{{url}}", url);
 
-            await emailService.SendEmailMsGraph(entity.Email, body, title);
+            await emailService.SendEmail(entity.Email, title, HtmlTemplates.EmailRecoveryPassword, new Dictionary<string, string> { { "url", url }, { "name", entity.FirstName } } );
 
             return ("", true);
         }

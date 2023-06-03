@@ -24,6 +24,9 @@ namespace ASM.Services.Models.Settings
         [FirestoreProperty(Name = "Name")]
         public string? Name { get; set; }
 
+        [FirestoreProperty(Name = "ElasticEmailApiKey")]
+        public string? ElasticEmailApiKey { get; set; }
+
         [FirestoreProperty(Name = "MicrosoftGraph")]
         public MicrosoftGraph MicrosoftGraph { get; set; }
     }

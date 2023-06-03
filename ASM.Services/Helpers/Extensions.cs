@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
-using System.Security.Policy;
 using System.Text.RegularExpressions;
 
 namespace ASM.Services.Helpers
@@ -51,6 +50,14 @@ namespace ASM.Services.Helpers
                 }"
             }.Build();
             services.AddScoped<FirestoreDb>(x => firestormDb);
+
+            return services;
+        }
+
+        public static IServiceCollection AddWebhookServices(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddScoped<IStorageService, StorageService>();
+            services.AddSingleton(x => configuration.Get<AsmConfiguration>());
 
             return services;
         }
