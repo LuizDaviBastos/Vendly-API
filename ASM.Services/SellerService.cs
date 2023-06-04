@@ -106,7 +106,7 @@ namespace ASM.Services
         public async Task<Seller?> GetSellerAndMeliAccounts(Guid sellerId)
         {
             return await unitOfWork.SellerRepository.GetQueryable().Where(x => x.Id == sellerId)
-                .Include(x => x.MeliAccounts).FirstOrDefaultAsync();
+                .Include(x => x.MeliAccounts).Include(x => x.BillingInformation).FirstOrDefaultAsync();
         }
 
         public async Task<Seller?> GetSellerOnly(Guid sellerId)
@@ -125,7 +125,8 @@ namespace ASM.Services
                     SellerId = sellerId,
                     IsFreePeriod = isFreePeriod,
                     LastPayment = lastPayment,
-                    Status = status
+                    Status = status,
+                    CurrentPlan = "1 Mês"
                 };
 
                 unitOfWork.BillingInformationRepository.Add(billing);
@@ -136,6 +137,7 @@ namespace ASM.Services
                 billing.LastPayment = lastPayment;
                 billing.IsFreePeriod = isFreePeriod;
                 billing.ExpireIn = expireIn;
+                billing.CurrentPlan = "1 Mês";
 
                 unitOfWork.BillingInformationRepository.Update(billing);
             }
@@ -285,34 +287,46 @@ namespace ASM.Services
             return order;
         }
 
-        public async Task<bool> ExpirateDateValid(Guid sellerId, bool searchPayment = true)
+        public async Task<ExpiredResponse> ExpirateDateValid(Guid sellerId, bool searchPayment = true)
         {
-            var expireIn = await unitOfWork.BillingInformationRepository.GetQueryable()
-                .Where(x => x.SellerId == sellerId).Select(x => x.ExpireIn).FirstOrDefaultAsync();
-            if (!expireIn.HasValue) return false;
+            ExpiredResponse response = new();
+            response.IsFreePeriod = false;
+            response.NotExpired = false;
 
-            var notExpirated = (expireIn.Value > DateTime.UtcNow);
+            var paymentInfo = await unitOfWork.BillingInformationRepository.GetQueryable()
+                .Where(x => x.SellerId == sellerId).Select(x => new PaymentInformation { ExpireIn = x.ExpireIn, IsFreePeriod = x.IsFreePeriod }).FirstOrDefaultAsync();
+            if (paymentInfo == null) return response;
+
+            var notExpirated = (paymentInfo.ExpireIn > DateTime.UtcNow);
+            response.NotExpired = notExpirated;
+            response.IsFreePeriod = paymentInfo.IsFreePeriod ?? false;
+
             if (!notExpirated && searchPayment)
             {
                 var payments = await mepaService.GetLastPayments(sellerId);
-                var paid = payments.Results.FirstOrDefault(x => x.DateApproved > expireIn.Value);
+                var paid = payments.Results.FirstOrDefault(x => x.DateApproved > paymentInfo.ExpireIn);
                 if (paid != null && (paid.Status == "approved" || paid.Status == "authorized"))
                 {
                     await SubscribeAgainRoutineAsync(sellerId, paid.DateApproved, paid.DateCreated, decimal.ToDouble(paid.TransactionAmount ?? 0));
-                    return true;
+                    response.NotExpired = true;
+                    return response;
                 }
             }
-
-            return notExpirated;
+            
+            return response;
         }
 
-        public async Task<bool> ExpirateDateValid(long meliSellerId, bool searchPayment = true)
+        public async Task<ExpiredResponse> ExpirateDateValid(long meliSellerId, bool searchPayment = true)
         {
+            ExpiredResponse response = new();
+            response.IsFreePeriod = false;
+            response.NotExpired = false;
+
             Guid? sellerId = await unitOfWork.MeliAccountRepository.GetQueryable()
                 .Where(x => x.MeliSellerId == meliSellerId).Include(x => x.Seller)
                 .Select(x => x.Seller.Id)
                 .FirstOrDefaultAsync();
-            if (!sellerId.HasValue) return false;
+            if (!sellerId.HasValue) return response;
 
             return await ExpirateDateValid(sellerId.Value, searchPayment);
         }
@@ -390,6 +404,11 @@ namespace ASM.Services
             await UpdateBillingInformation(sellerId, BillingStatus.Active, newExpireIn, lastPayment);
             await AddPaymentHistory(sellerId, price, createdDate);
             await SendPushNotificationAsync(sellerId, "Vendly", "Recebemos seu pagamento. Obrigado!");
+        }
+
+        public async Task<long?> GetFirstMeliAccountId(Guid sellerId)
+        {
+            return await unitOfWork.MeliAccountRepository.GetQueryable().Where(x => x.SellerId == sellerId).Select(x => x.MeliSellerId).FirstOrDefaultAsync();
         }
     }
 }
