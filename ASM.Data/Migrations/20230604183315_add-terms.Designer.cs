@@ -4,6 +4,7 @@ using ASM.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASM.Data.Migrations
 {
     [DbContext(typeof(AsmContext))]
-    partial class AsmContextModelSnapshot : ModelSnapshot
+    [Migration("20230604183315_add-terms")]
+    partial class addterms
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -85,9 +87,6 @@ namespace ASM.Data.Migrations
 
                     b.Property<string>("MetaData")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<long?>("PaymentId")
-                        .HasColumnType("bigint");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");

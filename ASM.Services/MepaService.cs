@@ -19,7 +19,7 @@ namespace ASM.Services
             this.settingsService = settingsService;
         }
 
-        public async Task<PaymentLinkResponse> CreatePreferenceSdk(Guid sellerId)
+        public async Task<PaymentLinkResponse> CreatePreference(Guid sellerId, bool isBinary = false)
         {
             PaymentLinkResponse response = new();
             var settings = await settingsService.GetAppSettingsAsync();
@@ -28,14 +28,16 @@ namespace ASM.Services
             var request = new PreferenceRequest
             {
                 ExternalReference = sellerId.ToString(),
+                NotificationUrl = settings.NotificationPaymentLink,
+                BinaryMode = isBinary,
                 Items = new List<PreferenceItemRequest>
                 {
                     new PreferenceItemRequest
                     {
-                        Title = settings?.VendlyItem?.Title ?? "Vendly Plano Mensal",
+                        Title = settings?.VendlyItem?.Title,
                         Quantity = 1,
                         CurrencyId = "BRL",
-                        UnitPrice = 39.90M
+                        UnitPrice =  ((settings?.VendlyItem?.Price.HasValue ?? false) ? Convert.ToDecimal(settings?.VendlyItem?.Price) : null)
                     },
                 },
                 Metadata = new Dictionary<string, object> { { "sellerId", sellerId } }
@@ -45,47 +47,13 @@ namespace ASM.Services
             var client = new PreferenceClient();
             var preference = await client.CreateAsync(request);
             response.init_point = preference.InitPoint;
-            response.price = settings?.VendlyItem?.Price ?? 39.90;
+            response.price = settings?.VendlyItem?.Price;
+            response.Success = true;
 
             return response;
         }
 
-        public async Task<ResultsResourcesPage<MercadoPago.Resource.Payment.Payment>> GetLastPayments(Guid sellerId, int limit = 3)
-        {
-            PaymentLinkResponse response = new();
-            var settings = await settingsService.GetAppSettingsAsync();
-            MercadoPagoConfig.AccessToken = settings.MePaToken;
-
-            var client = new PaymentClient();
-            var paymentResponse = await client.SearchAsync(new MercadoPago.Client.SearchRequest
-            {
-                Filters = new Dictionary<string, object>
-                {
-                    { "sort", "date_created" },
-                    { "criteria", "desc" },
-                    { "external_reference",  sellerId.ToString() }
-                },
-                Limit = limit,
-            });
-            
-            return paymentResponse;
-        }
-
-        public async Task<PaymentLinkResponse> GetPreference(string preferenceId)
-        {
-            PaymentLinkResponse response = new();
-            var settings = await settingsService.GetAppSettingsAsync();
-            MercadoPagoConfig.AccessToken = settings.MePaToken;
-
-            var client = new PreferenceClient();
-            var preference = await client.GetAsync(preferenceId);
-            response.init_point = preference.InitPoint;
-            response.price = settings?.VendlyItem?.Price ?? 39.90;
-
-            return response;
-        }
-
-        public async Task<PaymentLinkResponse> CreatePreference(Guid sellerId)
+        public async Task<PaymentLinkResponse> CreatePreferenceApi(Guid sellerId)
         {
             var settings = await settingsService.GetAppSettingsAsync();
             var accessToken = settings.MePaToken;
@@ -131,6 +99,42 @@ namespace ASM.Services
 
             return response;
         }
+
+        public async Task<ResultsResourcesPage<MercadoPago.Resource.Payment.Payment>> GetLastPayments(Guid sellerId, int limit = 3)
+        {
+            PaymentLinkResponse response = new();
+            var settings = await settingsService.GetAppSettingsAsync();
+            MercadoPagoConfig.AccessToken = settings.MePaToken;
+
+            var client = new PaymentClient();
+            var paymentResponse = await client.SearchAsync(new MercadoPago.Client.SearchRequest
+            {
+                Filters = new Dictionary<string, object>
+                {
+                    { "sort", "date_created" },
+                    { "criteria", "desc" },
+                    { "external_reference",  sellerId.ToString() }
+                },
+                Limit = limit,
+            });
+            
+            return paymentResponse;
+        }
+
+        public async Task<PaymentLinkResponse> GetPreference(string preferenceId)
+        {
+            PaymentLinkResponse response = new();
+            var settings = await settingsService.GetAppSettingsAsync();
+            MercadoPagoConfig.AccessToken = settings.MePaToken;
+
+            var client = new PreferenceClient();
+            var preference = await client.GetAsync(preferenceId);
+            response.init_point = preference.InitPoint;
+            response.price = settings?.VendlyItem?.Price ?? 39.90;
+
+            return response;
+        }
+
 
         public async Task<PaymentResponse> GetPaymentInformation(string paymentId)
         {

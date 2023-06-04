@@ -11,6 +11,7 @@ namespace ASM.Data.Entities
         public string LastName { get; set; }
         public string Country { get; set; }
         public string? ConfirmationCode { get; set; }
+        public bool? AcceptedTerms { get; set; }
 
         public virtual PaymentInformation BillingInformation { get; set; }
         public virtual IList<MeliAccount> MeliAccounts { get; set; }

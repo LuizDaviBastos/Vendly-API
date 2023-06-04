@@ -54,8 +54,8 @@ namespace ASM.PreFunction.Functions
                         return;
                     }
 
-                    var status = await sellerService.ExpirateDateValid(sellerId.Value, false);
-                    if (status.NotExpired) return;
+                    var status = await sellerService.PaymentProcessed(paymentInformations.id);
+                    if (status) return;
 
                     var seller = await sellerService.GetSellerOnly(sellerId.Value);
                     if(seller == null)
@@ -68,7 +68,7 @@ namespace ASM.PreFunction.Functions
                     DateTime? createdDate = paymentInformations.date_created;
                     double? price = paymentInformations.transaction_amount;
 
-                    await sellerService.SubscribeAgainRoutineAsync(sellerId.Value, lastPayment, createdDate, price);
+                    await sellerService.SubscribeAgainRoutineAsync(sellerId.Value, lastPayment, createdDate, price, paymentInformations.id.Value);
                 }
             }
         }

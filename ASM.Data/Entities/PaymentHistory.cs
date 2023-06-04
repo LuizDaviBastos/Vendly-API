@@ -10,6 +10,7 @@ namespace ASM.Data.Entities
         public DateTime CreatedDate { get; set; }
         public decimal Price { get; set; }
         public string? MetaData { get; set; }
+        public long? PaymentId { get; set; }
 
         public Guid SellerId { get; set; }
 

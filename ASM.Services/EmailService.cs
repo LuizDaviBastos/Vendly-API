@@ -67,43 +67,6 @@ namespace ASM.Services
             await smtpClient.SendMailAsync(mailMessage);
         }
 
-        public async Task SendEmailMsGraph(string to, string body, string subject)
-        {
-            var settings = await settingsService.GetAppSettingsAsync();
-            smtpSettings = settings.SmtpSettings;
-            var graphSettings = smtpSettings.MicrosoftGraph;
-
-            var scopes = new List<string> { "https://graph.microsoft.com/.default" };
-            string tenantId = graphSettings.TenantId;
-            string clientId = graphSettings.ClientId;
-            string clientSecret = graphSettings.ClientSecret;
-            string userName = smtpSettings.UserName;
-
-            var options = new TokenCredentialOptions
-            {
-                AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
-            };
-
-            var clientSecretCredential = new ClientSecretCredential(tenantId, clientId, clientSecret);
-            var graphClient = new GraphServiceClient(clientSecretCredential, scopes);
-
-            var message = new Message()
-            {
-                Subject = subject,
-                Body = new ItemBody
-                {
-                    Content = body,
-                    ContentType = BodyType.Html
-                },
-                ToRecipients = new List<Recipient> { new Recipient { EmailAddress = new EmailAddress { Address = to } } }
-            };
-
-            await graphClient.Users[userName].SendMail.PostAsync(new Microsoft.Graph.Users.Item.SendMail.SendMailPostRequestBody
-            {
-                Message = message
-            });
-        }
-
 
 
     }

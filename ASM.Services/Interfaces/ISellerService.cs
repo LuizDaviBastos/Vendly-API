@@ -23,13 +23,14 @@ namespace ASM.Services.Interfaces
         public Task<(string, bool)> RecoveryPassword(Guid sellerId, string code, string newPassword);
         public Task<Seller?> GetSellerOnly(Guid sellerId);
         public Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, BillingStatus status, DateTime expireIn, DateTime lastPayment, bool isFreePeriod = false);
-        public Task<PaymentHistory> AddPaymentHistory(Guid sellerId, double? price, DateTime createdDate, string metaData = null);
+        public Task<PaymentHistory> AddPaymentHistory(Guid sellerId, double? price, DateTime createdDate, long paymentId, string metaData = null);
         public Task<ExpiredResponse> ExpirateDateValid(Guid sellerId, bool searchPayment = true);
         public Task<ExpiredResponse> ExpirateDateValid(long meliSellerId, bool searchPayment = true);
         public Task RegisterFcmToken(Guid sellerId, string? fcmToken);
         public Task<PaymentInformation?> GetPaymentInformation(Guid sellerId);
         public Task SendPushNotificationAsync(Guid sellerId, string title, string body, Priority priority = Priority.Normal);
-        public Task SubscribeAgainRoutineAsync(Guid sellerId, DateTime? dateApproved, DateTime? dateCreated, double? price);
+        public Task SubscribeAgainRoutineAsync(Guid sellerId, DateTime? dateApproved, DateTime? dateCreated, double? price, long paymentId);
         public Task<long?> GetFirstMeliAccountId(Guid sellerId);
+        public Task<bool> PaymentProcessed(long? paymentId);
     }
 }

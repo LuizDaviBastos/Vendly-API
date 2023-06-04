@@ -28,5 +28,8 @@ namespace ASM.Services.Models.Settings
 
         [FirestoreProperty(Name = "FcmServerKey")]
         public string? FcmServerKey { get; set; }
+
+        [FirestoreProperty(Name = "notificationPaymentLink")]
+        public string? NotificationPaymentLink { get; set; }
     }
 }

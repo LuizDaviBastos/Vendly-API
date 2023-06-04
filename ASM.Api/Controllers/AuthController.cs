@@ -61,6 +61,7 @@ namespace ASM.Api.Controllers
                     LastName = account.LastName,
                     UserName = account.Email,
                     Country = account.Country,
+                    AcceptedTerms = account.AcceptedTerms,
                     BillingInformation = PaymentInformation.GetFreePeriod()
                 };
 
@@ -284,6 +285,7 @@ namespace ASM.Api.Controllers
                     {
                         new Claim("UserId", user.Id.ToString())
                     }),
+                    Expires = DateTime.UtcNow.AddYears(2),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(asmConfiguration.JwtKey)), SecurityAlgorithms.HmacSha256Signature)
                 };
                 var tokenHandler = new JwtSecurityTokenHandler();

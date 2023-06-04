@@ -81,11 +81,11 @@ namespace ASM.Api.Controllers
         }
 
         [HttpGet("GetPaymentLink")]
-        public async Task<IActionResult> GetPaymentLink(Guid sellerId)
+        public async Task<IActionResult> GetPaymentLink(Guid sellerId, bool isBinary)
         {
             try
             {
-                var createResponse = await mepaService.CreatePreference(sellerId);
+                var createResponse = await mepaService.CreatePreference(sellerId, isBinary);
                 if (!createResponse.Success ?? true)
                 {
                     return Ok(RequestResponse.GetError(createResponse.Message));
@@ -142,6 +142,7 @@ namespace ASM.Api.Controllers
                     LastPayment = pInfo.LastPayment,
                     SellerId = sellerId,
                     Status = pInfo.Status,
+                    IsFreePeriod = pInfo.IsFreePeriod,
                     CurrentPlan = pInfo.CurrentPlan
                 };
 

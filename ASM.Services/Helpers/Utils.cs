@@ -54,16 +54,8 @@ namespace ASM.Services.Helpers
 
         public static long GetRandomCode()
         {
-            string code = "";
             var random = new Random();
-            for(int i  = 0; i < 6; i++)
-            {
-                code += random.Next(0, 9);
-            }
-
-            if (code.Length <= 5) return GetRandomCode();
-
-            return long.Parse(code);
+            return random.Next(100000, 999999);
         }
 
         public static string GetBase64String<T>(T value)

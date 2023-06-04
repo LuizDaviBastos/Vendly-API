@@ -145,13 +145,14 @@ namespace ASM.Services
             return billing;
         }
 
-        public async Task<PaymentHistory> AddPaymentHistory(Guid sellerId, double? price, DateTime createdDate, string metaData = null)
+        public async Task<PaymentHistory> AddPaymentHistory(Guid sellerId, double? price, DateTime createdDate, long paymentId, string metaData = null)
         {
             var history = new PaymentHistory
             {
                 SellerId = sellerId,
                 CreatedDate = createdDate,
                 Price = Convert.ToDecimal(price ?? 0),
+                PaymentId = paymentId,
                 MetaData = metaData
             };
 
@@ -307,7 +308,7 @@ namespace ASM.Services
                 var paid = payments.Results.FirstOrDefault(x => x.DateApproved > paymentInfo.ExpireIn);
                 if (paid != null && (paid.Status == "approved" || paid.Status == "authorized"))
                 {
-                    await SubscribeAgainRoutineAsync(sellerId, paid.DateApproved, paid.DateCreated, decimal.ToDouble(paid.TransactionAmount ?? 0));
+                    await SubscribeAgainRoutineAsync(sellerId, paid.DateApproved, paid.DateCreated, decimal.ToDouble(paid.TransactionAmount ?? 0), paid.Id.Value);
                     response.NotExpired = true;
                     return response;
                 }
@@ -395,20 +396,31 @@ namespace ASM.Services
             await unitOfWork.CommitAsync();
         }
 
-        public async Task SubscribeAgainRoutineAsync(Guid sellerId, DateTime? dateApproved, DateTime? dateCreated, double? price)
+        public async Task SubscribeAgainRoutineAsync(Guid sellerId, DateTime? dateApproved, DateTime? dateCreated, double? price, long paymentId)
         {
             var lastPayment = dateApproved?.ToUniversalTime() ?? DateTime.UtcNow;
-            var newExpireIn = DateTime.UtcNow.AddMonths(1);
+            DateTime baseDate = DateTime.UtcNow;
+            var currentBilling = await GetPaymentInformation(sellerId);
+            if(currentBilling?.ExpireIn > DateTime.UtcNow)
+            {
+                baseDate = currentBilling.ExpireIn.Value;
+            }
+            var newExpireIn = baseDate.AddMonths(1);
             DateTime createdDate = dateCreated?.ToUniversalTime() ?? DateTime.UtcNow;
 
             await UpdateBillingInformation(sellerId, BillingStatus.Active, newExpireIn, lastPayment);
-            await AddPaymentHistory(sellerId, price, createdDate);
-            await SendPushNotificationAsync(sellerId, "Vendly", "Recebemos seu pagamento. Obrigado!");
+            await AddPaymentHistory(sellerId, price, createdDate, paymentId);
+            await SendPushNotificationAsync(sellerId, "Vendly", "Pagamento efetuado!");
         }
 
         public async Task<long?> GetFirstMeliAccountId(Guid sellerId)
         {
             return await unitOfWork.MeliAccountRepository.GetQueryable().Where(x => x.SellerId == sellerId).Select(x => x.MeliSellerId).FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> PaymentProcessed(long? paymentId)
+        {
+            return await unitOfWork.PaymentHistoryRepository.GetQueryable().AnyAsync(x => x.PaymentId == paymentId);
         }
     }
 }
