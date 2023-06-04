@@ -61,10 +61,7 @@ namespace ASM.Api.Controllers
                     LastName = account.LastName,
                     UserName = account.Email,
                     Country = account.Country,
-                    BillingInformation = new PaymentInformation
-                    {
-                        ExpireIn = DateTime.UtcNow.AddDays(15)
-                    }
+                    BillingInformation = PaymentInformation.GetFreePeriod()
                 };
 
                 var createResult = await userManager.CreateAsync(entity, account.Password);
@@ -284,10 +281,9 @@ namespace ASM.Api.Controllers
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(new Claim[]
-                {
+                    {
                         new Claim("UserId", user.Id.ToString())
-                }),
-                    Expires = DateTime.UtcNow.AddDays(30),
+                    }),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(asmConfiguration.JwtKey)), SecurityAlgorithms.HmacSha256Signature)
                 };
                 var tokenHandler = new JwtSecurityTokenHandler();

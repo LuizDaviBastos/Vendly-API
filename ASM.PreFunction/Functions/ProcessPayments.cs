@@ -55,7 +55,7 @@ namespace ASM.PreFunction.Functions
                     }
 
                     var status = await sellerService.ExpirateDateValid(sellerId.Value, false);
-                    if (status) return;
+                    if (status.NotExpired) return;
 
                     var seller = await sellerService.GetSellerOnly(sellerId.Value);
                     if(seller == null)

@@ -29,7 +29,7 @@ namespace ASM.PreFunction.Functions
         public async Task Run([QueueTrigger("pre-process-notifications")] NotificationTrigger notification, ILogger log)
         {
             var status = await sellerService.ExpirateDateValid(notification.user_id);
-            if (!status) return;
+            if (!status.NotExpired) return;
 
             if (notification.IsOrderV2)
             {

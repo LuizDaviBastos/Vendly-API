@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ASM.Api.Controllers
 {
@@ -61,5 +64,6 @@ namespace ASM.Api.Controllers
             await emailService.SendEmail(to, "Vendly - Test", HtmlTemplates.EmailRecoveryPassword, new Dictionary<string, string> { { "url", url ?? "https://facebook.com" } });
             return Ok();
         }
+
     }
 }

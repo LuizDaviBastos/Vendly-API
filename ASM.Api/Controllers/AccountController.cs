@@ -1,8 +1,5 @@
 ﻿using ASM.Api.Models;
-using ASM.Services;
 using ASM.Services.Interfaces;
-using ASM.Services.Models;
-using Google.Type;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -46,11 +43,19 @@ namespace ASM.Api.Controllers
         }
 
         [HttpGet("GetMeliSellerInfo")]
-        public async Task<IActionResult> GetMeliSellerInfo(long meliSellerId)
+        public async Task<IActionResult> GetMeliSellerInfo(long? meliSellerId)
         {
             try
             {
-                var sellerInfo = await meliService.GetMeliSellerInfo(meliSellerId);
+                if(TryGetSellerId(out Guid sellerId))
+                {
+                    if (!meliSellerId.HasValue || meliSellerId == 0)
+                    {
+                        meliSellerId = await sellerService.GetFirstMeliAccountId(sellerId);
+                    }
+                }
+                
+                var sellerInfo = await meliService.GetMeliSellerInfo(meliSellerId.Value);
 
                 if(sellerInfo.Success ?? false) return Ok(RequestResponse.GetSuccess(sellerInfo));
                 return BadRequest(RequestResponse.GetError(sellerInfo.Message));
@@ -136,14 +141,13 @@ namespace ASM.Api.Controllers
                     Id = pInfo.Id,
                     LastPayment = pInfo.LastPayment,
                     SellerId = sellerId,
-                    Status = pInfo.Status
+                    Status = pInfo.Status,
+                    CurrentPlan = pInfo.CurrentPlan
                 };
 
                 var settings = await settingsService.GetAppSettingsAsync();
                 response.Price = settings?.VendlyItem?.Price;
 
-                response.ExpireInFormatted = pInfo.ExpireIn.Value.ToString("dd 'de' MMMM 'de' yyyy", new CultureInfo("pt-BR"));
-                if (pInfo.LastPayment.HasValue) response.LastPaymentFormatted = pInfo.LastPayment.Value.ToString("dd 'de' MMMM 'de' yyyy", new CultureInfo("pt-BR"));
                 return Ok(RequestResponse.GetSuccess(response));
             }
             catch (Exception ex)

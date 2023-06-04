@@ -114,7 +114,7 @@ namespace ASM.Services
             return await unitOfWork.SellerRepository.GetQueryable().Where(x => x.Id == sellerId).FirstOrDefaultAsync();
         }
 
-        public async Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, BillingStatus status, DateTime expireIn, DateTime lastPayment)
+        public async Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, BillingStatus status, DateTime expireIn, DateTime lastPayment, bool isFreePeriod = false)
         {
             var billing = await unitOfWork.BillingInformationRepository.GetQueryable().Where(x => x.SellerId == sellerId).FirstOrDefaultAsync();
             if (billing == null)
@@ -123,6 +123,7 @@ namespace ASM.Services
                 {
                     ExpireIn = expireIn,
                     SellerId = sellerId,
+                    IsFreePeriod = isFreePeriod,
                     LastPayment = lastPayment,
                     Status = status
                 };
@@ -133,6 +134,7 @@ namespace ASM.Services
             {
                 billing.Status = BillingStatus.Active;
                 billing.LastPayment = lastPayment;
+                billing.IsFreePeriod = isFreePeriod;
                 billing.ExpireIn = expireIn;
 
                 unitOfWork.BillingInformationRepository.Update(billing);
