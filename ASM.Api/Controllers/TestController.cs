@@ -5,10 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ASM.Api.Controllers
 {
@@ -47,8 +44,8 @@ namespace ASM.Api.Controllers
         [HttpGet(nameof(CreatePreference))]
         public async Task<IActionResult> CreatePreference(Guid sellerId)
         {
-            var response = await mepaService.CreatePreference(sellerId);
-            return Ok(response);
+            //var response = await mepaService.CreatePreference(sellerId, Guid.NewGuid());
+            return Ok();
         }
 
         [HttpGet(nameof(GetPayment))]

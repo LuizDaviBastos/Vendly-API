@@ -1,4 +1,5 @@
 ﻿using ASM.Api.Models;
+using ASM.Services;
 using ASM.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,13 +18,15 @@ namespace ASM.Api.Controllers
         private readonly ISellerService sellerService;
         private readonly IMepaService mepaService;
         private readonly ISettingsService settingsService;
+        private readonly PaymentService paymentService;
 
-        public AccountController(IMeliService meliService, ISellerService sellerService, IMepaService mepaService, ISettingsService settingsService)
+        public AccountController(IMeliService meliService, ISellerService sellerService, IMepaService mepaService, ISettingsService settingsService, PaymentService paymentService)
         {
             this.meliService = meliService;
             this.sellerService = sellerService;
             this.mepaService = mepaService;
             this.settingsService = settingsService;
+            this.paymentService = paymentService;
         }
 
         [HttpGet("GetSellerInfo")]
@@ -81,11 +84,11 @@ namespace ASM.Api.Controllers
         }
 
         [HttpGet("GetPaymentLink")]
-        public async Task<IActionResult> GetPaymentLink(Guid sellerId, bool isBinary)
+        public async Task<IActionResult> GetPaymentLink(Guid sellerId, Guid subscriptionPlanId, bool isBinary)
         {
             try
             {
-                var createResponse = await mepaService.CreatePreference(sellerId, isBinary);
+                var createResponse = await paymentService.GetNewPaymentLink(sellerId, subscriptionPlanId, isBinary);
                 if (!createResponse.Success ?? true)
                 {
                     return Ok(RequestResponse.GetError(createResponse.Message));
@@ -104,7 +107,7 @@ namespace ASM.Api.Controllers
         {
             try
             {
-                var status = await sellerService.ExpirateDateValid(sellerId);
+                var status = await paymentService.ExpirateDateValid(sellerId);
                 return Ok(RequestResponse.GetSuccess(status));
             }
             catch (Exception ex)
@@ -132,22 +135,13 @@ namespace ASM.Api.Controllers
         {
             try
             {
-                var pInfo = await sellerService.GetPaymentInformation(sellerId);
+                var pInfo = await paymentService.GetPaymentInformation(sellerId);
                 if (pInfo == null || !pInfo.ExpireIn.HasValue) return Ok(RequestResponse.GetError("Informações da assinatura não encontradas."));
 
-                PaymentInformationResult response  = new PaymentInformationResult
-                {
-                    ExpireIn = pInfo.ExpireIn.Value,
-                    Id = pInfo.Id,
-                    LastPayment = pInfo.LastPayment,
-                    SellerId = sellerId,
-                    Status = pInfo.Status,
-                    IsFreePeriod = pInfo.IsFreePeriod,
-                    CurrentPlan = pInfo.CurrentPlan
-                };
+                PaymentInformationResult response = new PaymentInformationResult(pInfo, sellerId);
 
-                var settings = await settingsService.GetAppSettingsAsync();
-                response.Price = settings?.VendlyItem?.Price;
+                //var settings = await settingsService.GetAppSettingsAsync();
+                //response.Price = settings?.VendlyItem?.Price;
 
                 return Ok(RequestResponse.GetSuccess(response));
             }

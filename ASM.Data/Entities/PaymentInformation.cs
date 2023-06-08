@@ -11,22 +11,11 @@ namespace ASM.Data.Entities
         public DateTime? LastPayment { get; set; }
         public DateTime? ExpireIn { get; set; }
 
-
         public Guid SellerId { get; set; }
         [JsonIgnore]
         public virtual Seller Seller { get; set; }
-        public bool? IsFreePeriod { get; set; }
-        public string? CurrentPlan { get; set; }
 
-        public static PaymentInformation GetFreePeriod()
-        {
-            return new PaymentInformation
-            {
-                CurrentPlan = "15 Dias",
-                Status = BillingStatus.Active,
-                IsFreePeriod = true,
-                ExpireIn = DateTime.UtcNow.AddDays(15)
-            };
-        }
+        public Guid? SubscriptionPlanId { get; set; }
+        public virtual SubscriptionPlan SubscriptionPlan { get; set; }
     }
 }

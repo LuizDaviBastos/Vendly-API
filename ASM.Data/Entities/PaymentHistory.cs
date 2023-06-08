@@ -10,11 +10,15 @@ namespace ASM.Data.Entities
         public DateTime CreatedDate { get; set; }
         public decimal Price { get; set; }
         public string? MetaData { get; set; }
-        public long? PaymentId { get; set; }
+        public Guid? UserPaymentId { get; set; }
+        public PaymentStatus? Status { get; set; }
 
         public Guid SellerId { get; set; }
 
         [JsonIgnore]
         public virtual Seller Seller { get; set; }
+
+        public Guid? SubscriptionPlanId { get; set; }
+        public virtual SubscriptionPlan SubscriptionPlan { get; set; }
     }
 }

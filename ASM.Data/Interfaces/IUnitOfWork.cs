@@ -11,6 +11,7 @@ namespace ASM.Data.Interfaces
         public IBillingInformationRepository BillingInformationRepository { get; }
         public IPaymentHistoryRepository PaymentHistoryRepository { get; }
         public ISellerFcmTokenRepository SellerFcmTokenRepository { get; }
+        public ISubscriptionPlanRepository SubscriptionPlanRepository { get; }
 
         public void Commit();
         public Task CommitAsync();

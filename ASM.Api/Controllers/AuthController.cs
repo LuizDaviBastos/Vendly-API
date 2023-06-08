@@ -2,8 +2,11 @@
 using ASM.Api.Models;
 using ASM.Data.Entities;
 using ASM.Data.Interfaces;
+using ASM.Services;
+using ASM.Services.Helpers;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
+using ASM.Services.Models.Mepa;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +26,7 @@ namespace ASM.Api.Controllers
     {
         private readonly IMeliService meliService;
         private readonly ISellerService sellerService;
+        private readonly PaymentService paymentService;
         private readonly IUnitOfWork uow;
         private readonly AsmConfiguration asmConfiguration;
         private readonly UserManager<Seller> userManager;
@@ -31,13 +35,15 @@ namespace ASM.Api.Controllers
             AsmConfiguration asmConfiguration,
             ISellerService sellerService,
             UserManager<Seller> userManager,
-            IUnitOfWork uow)
+            IUnitOfWork uow,
+            PaymentService paymentService)
         {
             this.meliService = meliService;
             this.asmConfiguration = asmConfiguration;
             this.sellerService = sellerService;
             this.userManager = userManager;
             this.uow = uow;
+            this.paymentService = paymentService;
         }
 
         [HttpGet("GetAuthUrl")]
@@ -54,6 +60,8 @@ namespace ASM.Api.Controllers
         {
             try
             {
+                var subscriptionPlan = await paymentService.GetSubscriptionPlanAsync(x => x.IsFree == true);
+                var payment = new PaymentInformation().SetSubscription(subscriptionPlan, DateTime.UtcNow);
                 var entity = new Seller
                 {
                     Email = account.Email,
@@ -62,7 +70,7 @@ namespace ASM.Api.Controllers
                     UserName = account.Email,
                     Country = account.Country,
                     AcceptedTerms = account.AcceptedTerms,
-                    BillingInformation = PaymentInformation.GetFreePeriod()
+                    BillingInformation = payment
                 };
 
                 var createResult = await userManager.CreateAsync(entity, account.Password);

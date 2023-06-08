@@ -17,9 +17,9 @@
         //public Payer payer { get; set; }
         public Metadata metadata { get; set; }
         //public AdditionalInfo additional_info { get; set; }
-        public double? transaction_amount { get; set; }
-        public double? transaction_amount_refunded { get; set; }
-        public double? coupon_amount { get; set; }
+        public decimal? transaction_amount { get; set; }
+        public decimal? transaction_amount_refunded { get; set; }
+        public decimal? coupon_amount { get; set; }
         //public TransactionDetails transaction_details { get; set; }
         //public int? installments { get; set; }
         //public Card card { get; set; }
@@ -42,6 +42,7 @@
     public class Metadata
     {
         public Guid? sellerId { get; set; }
+        public Guid? userPaymentId { get; set; }
     }
 
     public class Payer

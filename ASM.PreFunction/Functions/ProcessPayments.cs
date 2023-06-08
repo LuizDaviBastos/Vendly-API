@@ -17,14 +17,16 @@ namespace ASM.PreFunction.Functions
         private readonly IMepaService mepaService;
         private readonly ISellerService sellerService;
         private readonly FcmService fcmService;
+        private readonly PaymentService paymentService;
 
-        public ProcessPayments(IStorageService storageService, IMeliService meliService, ISellerService sellerService, IMepaService mepaService, FcmService fcmService)
+        public ProcessPayments(IStorageService storageService, IMeliService meliService, ISellerService sellerService, IMepaService mepaService, FcmService fcmService, PaymentService paymentService)
         {
             this.storageService = storageService;
             this.meliService = meliService;
             this.sellerService = sellerService;
             this.mepaService = mepaService;
             this.fcmService = fcmService;
+            this.paymentService = paymentService;
         }
 
         [FunctionName("ProcessPayments")]
@@ -48,13 +50,14 @@ namespace ASM.PreFunction.Functions
                 if (paymentInformations.status == "approved" || paymentInformations.status == "authorized")
                 {
                     var sellerId = paymentInformations.metadata.sellerId;
-                    if (!sellerId.HasValue || sellerId == Guid.Empty)
+                    var userPaymentId = paymentInformations.metadata.userPaymentId;
+                    if (!sellerId.HasValue || sellerId == Guid.Empty || !userPaymentId.HasValue)
                     {
-                        log.LogError("Falha ao processar o pagamento. SellerId não encontrado.");
+                        log.LogError("Falha ao processar o pagamento. SellerId ou UserPaymentId não encontrado.");
                         return;
                     }
 
-                    var status = await sellerService.PaymentProcessed(paymentInformations.id);
+                    var status = await paymentService.PaymentProcessed(userPaymentId.Value);
                     if (status) return;
 
                     var seller = await sellerService.GetSellerOnly(sellerId.Value);
@@ -66,9 +69,9 @@ namespace ASM.PreFunction.Functions
 
                     var lastPayment = paymentInformations.date_approved?.ToUniversalTime() ?? DateTime.UtcNow;
                     DateTime? createdDate = paymentInformations.date_created;
-                    double? price = paymentInformations.transaction_amount;
+                    decimal? price = paymentInformations.transaction_amount;
 
-                    await sellerService.SubscribeAgainRoutineAsync(sellerId.Value, lastPayment, createdDate, price, paymentInformations.id.Value);
+                    await paymentService.SubscribeAgainRoutineAsync(sellerId.Value, lastPayment, createdDate, price, userPaymentId.Value);
                 }
             }
         }

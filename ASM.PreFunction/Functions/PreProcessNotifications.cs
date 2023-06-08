@@ -17,18 +17,20 @@ namespace ASM.PreFunction.Functions
         private readonly IStorageService storageService;
         private readonly IMeliService meliService;
         private readonly ISellerService sellerService;
+        private readonly PaymentService paymentService;
 
-        public PreProcessNotifications(IStorageService storageService, IMeliService meliService, ISellerService sellerService)
+        public PreProcessNotifications(IStorageService storageService, IMeliService meliService, ISellerService sellerService, PaymentService paymentService)
         {
             this.storageService = storageService;
             this.meliService = meliService;
             this.sellerService = sellerService;
+            this.paymentService = paymentService;
         }
 
         [FunctionName("PreProcessNotifications")]
         public async Task Run([QueueTrigger("pre-process-notifications")] NotificationTrigger notification, ILogger log)
         {
-            var status = await sellerService.ExpirateDateValid(notification.user_id);
+            var status = await paymentService.ExpirateDateValid(notification.user_id);
             if (!status.NotExpired) return;
 
             if (notification.IsOrderV2)

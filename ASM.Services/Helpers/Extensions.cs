@@ -1,4 +1,6 @@
 ﻿using ASM.Data;
+using ASM.Data.Entities;
+using ASM.Data.Enums;
 using ASM.Data.Interfaces;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
@@ -24,6 +26,8 @@ namespace ASM.Services.Helpers
             services.AddSingleton(x => configuration.Get<AsmConfiguration>());
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IMepaService, MepaService>();
+            services.AddScoped<PaymentService>();
+            services.AddScoped<PushNotificationService>();
             services.AddScoped<FcmService>();
 
             var client = new MongoClient("mongodb+srv://luiz:80849903D@asmserveless.m1ukj.mongodb.net/?retryWrites=true&w=majority");
@@ -67,6 +71,25 @@ namespace ASM.Services.Helpers
             if(string.IsNullOrEmpty(input)) return input;
             string pattern = @"(?<=[\w]{1})[\w\-._\+%]*(?=[\w]{1}@)";
             return Regex.Replace(input, pattern, m => new string('*', m.Length));
+        }
+
+        public static PaymentInformation SetSubscription(this PaymentInformation paymentInfo, SubscriptionPlan subscriptionPlan, DateTime baseDate)
+        {
+            DateTime newExpireIn = baseDate;
+            switch (subscriptionPlan.ValidateType)
+            {
+                case ValidateType.Days:
+                    newExpireIn = baseDate.AddDays(subscriptionPlan.ValidateValue);
+                    break;
+                case ValidateType.Months:
+                    newExpireIn = baseDate.AddMonths(subscriptionPlan.ValidateValue);
+                    break;
+                default:
+                    break;
+            }
+            paymentInfo.ExpireIn = newExpireIn;
+            paymentInfo.SubscriptionPlanId = subscriptionPlan.Id;
+            return paymentInfo;
         }
     }
 }

@@ -5,12 +5,8 @@ using ASM.Services.Helpers;
 using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using ASM.Services.Models.Constants;
-using ASM.Services.Models.Mepa;
-using FCM.Net;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Graph.Drives.Item.Items.Item.Workbook.Worksheets.Item.Charts.Item.Axes.CategoryAxis.Title;
-using MongoDB.Driver.Core.Servers;
 
 namespace ASM.Services
 {
@@ -20,17 +16,13 @@ namespace ASM.Services
         private readonly IEmailService emailService;
         private readonly ISettingsService settingsService;
         private readonly UserManager<Seller> userManager;
-        private readonly IMepaService mepaService;
-        private readonly FcmService fcmService;
 
-        public SellerService(IUnitOfWork unitOfWork, IEmailService emailService, ISettingsService settingsService, UserManager<Seller> userManager, IMepaService mepaService, FcmService fcmService)
+        public SellerService(IUnitOfWork unitOfWork, IEmailService emailService, ISettingsService settingsService, UserManager<Seller> userManager)
         {
             this.unitOfWork = unitOfWork;
             this.emailService = emailService;
             this.settingsService = settingsService;
             this.userManager = userManager;
-            this.mepaService = mepaService;
-            this.fcmService = fcmService;
         }
 
         public async Task<(string, bool)> SaveAccount(Seller seller)
@@ -112,53 +104,6 @@ namespace ASM.Services
         public async Task<Seller?> GetSellerOnly(Guid sellerId)
         {
             return await unitOfWork.SellerRepository.GetQueryable().Where(x => x.Id == sellerId).FirstOrDefaultAsync();
-        }
-
-        public async Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, BillingStatus status, DateTime expireIn, DateTime lastPayment, bool isFreePeriod = false)
-        {
-            var billing = await unitOfWork.BillingInformationRepository.GetQueryable().Where(x => x.SellerId == sellerId).FirstOrDefaultAsync();
-            if (billing == null)
-            {
-                billing = new PaymentInformation
-                {
-                    ExpireIn = expireIn,
-                    SellerId = sellerId,
-                    IsFreePeriod = isFreePeriod,
-                    LastPayment = lastPayment,
-                    Status = status,
-                    CurrentPlan = "1 Mês"
-                };
-
-                unitOfWork.BillingInformationRepository.Add(billing);
-            }
-            else
-            {
-                billing.Status = BillingStatus.Active;
-                billing.LastPayment = lastPayment;
-                billing.IsFreePeriod = isFreePeriod;
-                billing.ExpireIn = expireIn;
-                billing.CurrentPlan = "1 Mês";
-
-                unitOfWork.BillingInformationRepository.Update(billing);
-            }
-            await unitOfWork.CommitAsync();
-            return billing;
-        }
-
-        public async Task<PaymentHistory> AddPaymentHistory(Guid sellerId, double? price, DateTime createdDate, long paymentId, string metaData = null)
-        {
-            var history = new PaymentHistory
-            {
-                SellerId = sellerId,
-                CreatedDate = createdDate,
-                Price = Convert.ToDecimal(price ?? 0),
-                PaymentId = paymentId,
-                MetaData = metaData
-            };
-
-            unitOfWork.PaymentHistoryRepository.Add(history);
-            await unitOfWork.CommitAsync();
-            return history;
         }
 
         public async Task<bool> HasMeliAccount(Guid sellerId)
@@ -288,55 +233,6 @@ namespace ASM.Services
             return order;
         }
 
-        public async Task<ExpiredResponse> ExpirateDateValid(Guid sellerId, bool searchPayment = true)
-        {
-            ExpiredResponse response = new();
-            response.IsFreePeriod = false;
-            response.NotExpired = false;
-
-            var paymentInfo = await unitOfWork.BillingInformationRepository.GetQueryable()
-                .Where(x => x.SellerId == sellerId).Select(x => new PaymentInformation { ExpireIn = x.ExpireIn, IsFreePeriod = x.IsFreePeriod }).FirstOrDefaultAsync();
-            if (paymentInfo == null) return response;
-
-            var notExpirated = (paymentInfo.ExpireIn > DateTime.UtcNow);
-            response.NotExpired = notExpirated;
-            response.IsFreePeriod = paymentInfo.IsFreePeriod ?? false;
-
-            if (!notExpirated && searchPayment)
-            {
-                var payments = await mepaService.GetLastPayments(sellerId);
-                var paid = payments.Results.FirstOrDefault(x => x.DateApproved > paymentInfo.ExpireIn);
-                if (paid != null && (paid.Status == "approved" || paid.Status == "authorized"))
-                {
-                    await SubscribeAgainRoutineAsync(sellerId, paid.DateApproved, paid.DateCreated, decimal.ToDouble(paid.TransactionAmount ?? 0), paid.Id.Value);
-                    response.NotExpired = true;
-                    return response;
-                }
-            }
-            
-            return response;
-        }
-
-        public async Task<ExpiredResponse> ExpirateDateValid(long meliSellerId, bool searchPayment = true)
-        {
-            ExpiredResponse response = new();
-            response.IsFreePeriod = false;
-            response.NotExpired = false;
-
-            Guid? sellerId = await unitOfWork.MeliAccountRepository.GetQueryable()
-                .Where(x => x.MeliSellerId == meliSellerId).Include(x => x.Seller)
-                .Select(x => x.Seller.Id)
-                .FirstOrDefaultAsync();
-            if (!sellerId.HasValue) return response;
-
-            return await ExpirateDateValid(sellerId.Value, searchPayment);
-        }
-
-        public async Task<PaymentInformation?> GetPaymentInformation(Guid sellerId)
-        {
-            return await unitOfWork.BillingInformationRepository.GetQueryable().Where(x => x.SellerId == sellerId).FirstOrDefaultAsync();
-        }
-
         public async Task RegisterFcmToken(Guid sellerId, string? fcmToken)
         {
             var entity = await unitOfWork.SellerFcmTokenRepository.GetQueryable()
@@ -366,12 +262,6 @@ namespace ASM.Services
             }
         }
 
-        public async Task SendPushNotificationAsync(Guid sellerId, string title, string body, Priority priority = Priority.Normal)
-        {
-            var tokens = await unitOfWork.SellerFcmTokenRepository.GetTokens(sellerId);
-            await fcmService.SendPushNotificationAsync(tokens, title, body, priority);
-        }
-
         private void UpdateMessageStatus(SellerOrder order, MessageType type, bool status)
         {
             switch (type)
@@ -396,31 +286,10 @@ namespace ASM.Services
             await unitOfWork.CommitAsync();
         }
 
-        public async Task SubscribeAgainRoutineAsync(Guid sellerId, DateTime? dateApproved, DateTime? dateCreated, double? price, long paymentId)
-        {
-            var lastPayment = dateApproved?.ToUniversalTime() ?? DateTime.UtcNow;
-            DateTime baseDate = DateTime.UtcNow;
-            var currentBilling = await GetPaymentInformation(sellerId);
-            if(currentBilling?.ExpireIn > DateTime.UtcNow)
-            {
-                baseDate = currentBilling.ExpireIn.Value;
-            }
-            var newExpireIn = baseDate.AddMonths(1);
-            DateTime createdDate = dateCreated?.ToUniversalTime() ?? DateTime.UtcNow;
-
-            await UpdateBillingInformation(sellerId, BillingStatus.Active, newExpireIn, lastPayment);
-            await AddPaymentHistory(sellerId, price, createdDate, paymentId);
-            await SendPushNotificationAsync(sellerId, "Vendly", "Pagamento efetuado!");
-        }
-
         public async Task<long?> GetFirstMeliAccountId(Guid sellerId)
         {
             return await unitOfWork.MeliAccountRepository.GetQueryable().Where(x => x.SellerId == sellerId).Select(x => x.MeliSellerId).FirstOrDefaultAsync();
         }
 
-        public async Task<bool> PaymentProcessed(long? paymentId)
-        {
-            return await unitOfWork.PaymentHistoryRepository.GetQueryable().AnyAsync(x => x.PaymentId == paymentId);
-        }
     }
 }

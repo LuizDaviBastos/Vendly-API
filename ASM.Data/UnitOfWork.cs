@@ -14,6 +14,7 @@ namespace ASM.Data
         private IBillingInformationRepository billingInformationRepository;
         private IPaymentHistoryRepository paymentHistoryRepository;
         private ISellerFcmTokenRepository sellerFcmTokenRepository;
+        private ISubscriptionPlanRepository subscriptionPlanRepository;
 
         public UnitOfWork(AsmContext asmContext)
         {
@@ -83,6 +84,14 @@ namespace ASM.Data
             }
         }
 
+        public ISubscriptionPlanRepository SubscriptionPlanRepository
+        {
+            get
+            {
+                if (subscriptionPlanRepository == null) subscriptionPlanRepository = new SubscriptionPlanRepository(asmContext);
+                return subscriptionPlanRepository;
+            }
+        }
         public void Commit()
         {
             asmContext.SaveChanges();

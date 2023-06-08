@@ -1,4 +1,5 @@
-﻿using ASM.Services.Interfaces;
+﻿using ASM.Data.Entities;
+using ASM.Services.Interfaces;
 using ASM.Services.Models.Mepa;
 using MercadoPago.Client.Payment;
 using MercadoPago.Client.Preference;
@@ -19,7 +20,7 @@ namespace ASM.Services
             this.settingsService = settingsService;
         }
 
-        public async Task<PaymentLinkResponse> CreatePreference(Guid sellerId, bool isBinary = false)
+        public async Task<PaymentLinkResponse> CreatePreference(Guid sellerId, Guid userPaymentId, SubscriptionPlan subscriptionPlan, bool isBinary = false)
         {
             PaymentLinkResponse response = new();
             var settings = await settingsService.GetAppSettingsAsync();
@@ -34,68 +35,21 @@ namespace ASM.Services
                 {
                     new PreferenceItemRequest
                     {
-                        Title = settings?.VendlyItem?.Title,
+                        Title = subscriptionPlan.Name,
                         Quantity = 1,
                         CurrencyId = "BRL",
-                        UnitPrice =  ((settings?.VendlyItem?.Price.HasValue ?? false) ? Convert.ToDecimal(settings?.VendlyItem?.Price) : null)
+                        UnitPrice =  subscriptionPlan.Price
                     },
                 },
-                Metadata = new Dictionary<string, object> { { "sellerId", sellerId } }
+                Metadata = new Dictionary<string, object> { { "sellerId", sellerId }, { "userPaymentId", userPaymentId } }
             };
-
 
             var client = new PreferenceClient();
             var preference = await client.CreateAsync(request);
             response.init_point = preference.InitPoint;
-            response.price = settings?.VendlyItem?.Price;
+            response.price = subscriptionPlan.Price;
             response.Success = true;
-
-            return response;
-        }
-
-        public async Task<PaymentLinkResponse> CreatePreferenceApi(Guid sellerId)
-        {
-            var settings = await settingsService.GetAppSettingsAsync();
-            var accessToken = settings.MePaToken;
-            var response = new PaymentLinkResponse();
-            response.Success = false;
-
-            RestRequest request = new RestRequest($"/checkout/preferences", Method.POST);
-            request.AddHeader("Authorization", $"Bearer {accessToken}");
-
-            var body = new PaymentLinkParams
-            {
-                external_reference = sellerId.ToString(),
-                Items = new List<PaymentItem>
-                {
-                    new PaymentItem
-                    {
-                        currency_id = "BRL",
-                        quantity = 1,
-                        title = settings?.VendlyItem?.Title ?? "Vendly Plano Mensal",
-                        unit_price = settings?.VendlyItem?.Price ?? 39.90
-                    }
-                },
-                Metadata = new Metadata
-                {
-                    sellerId = sellerId
-                },
-            };
-
-            request.AddJsonBody(body);
-
-            var result = await restClient.ExecuteAsync<PaymentLinkResponse>(request);
-            if (result.IsSuccessful)
-            {
-                response = result.Data;
-                response.Success = true;
-                response.price = settings?.VendlyItem?.Price ?? 39.90;
-            }
-            else
-            {
-                response.Success = false;
-                response.Message = result.Content;
-            }
+            response.id = preference.Id;
 
             return response;
         }
@@ -130,7 +84,7 @@ namespace ASM.Services
             var client = new PreferenceClient();
             var preference = await client.GetAsync(preferenceId);
             response.init_point = preference.InitPoint;
-            response.price = settings?.VendlyItem?.Price ?? 39.90;
+            response.price = preference.Items.First().UnitPrice;
 
             return response;
         }
