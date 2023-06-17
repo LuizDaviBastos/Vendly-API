@@ -34,7 +34,7 @@ namespace ASM.Services
                 BinaryMode = isBinary,
                 Expires = true,
                 ExpirationDateFrom = DateTime.UtcNow,
-                ExpirationDateTo = DateTime.UtcNow.AddDays(5),
+                ExpirationDateTo = DateTime.UtcNow.AddHours(5),
                 Items = new List<PreferenceItemRequest>
                 {
                     new PreferenceItemRequest
