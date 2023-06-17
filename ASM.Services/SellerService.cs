@@ -95,6 +95,14 @@ namespace ASM.Services
             return message;
         }
 
+        public async Task<IList<SellerMessage>?> GetMessagesByMeliSellerId(long meliSellerId)
+        {
+            var messages = await unitOfWork.MeliAccountRepository.GetQueryable().Where(x => x.MeliSellerId == meliSellerId)
+                .Include(x => x.Messages)
+                .Select(x => x.Messages).FirstOrDefaultAsync();
+            return messages;
+        }
+
         public async Task<Seller?> GetSellerAndMeliAccounts(Guid sellerId)
         {
             return await unitOfWork.SellerRepository.GetQueryable().Where(x => x.Id == sellerId)
@@ -290,6 +298,5 @@ namespace ASM.Services
         {
             return await unitOfWork.MeliAccountRepository.GetQueryable().Where(x => x.SellerId == sellerId).Select(x => x.MeliSellerId).FirstOrDefaultAsync();
         }
-
     }
 }

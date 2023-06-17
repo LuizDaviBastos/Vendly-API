@@ -4,8 +4,9 @@ namespace ASM.Services.Models.Mepa
 {
     public class PaymentLinkResponse : RequestResponseBase
     {
-        public string id { get; set; }
+        public string? preferenceId { get; set; }
         public decimal? price { get; set; }
         public string? init_point { get; set; }
+
     }
 }

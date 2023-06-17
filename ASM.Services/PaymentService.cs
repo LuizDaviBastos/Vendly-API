@@ -6,6 +6,7 @@ using ASM.Services.Interfaces;
 using ASM.Services.Models;
 using ASM.Services.Models.Mepa;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient.DataClassification;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -39,7 +40,7 @@ namespace ASM.Services
             if (subscription != null)
             {
                 var mepaLink = await mepaService.CreatePreference(sellerId, userPaymentId, subscription, isBinary);
-                await AddOrUpdatePaymentHistory(sellerId, subscription.Price.Value, DateTime.UtcNow, userPaymentId, subscriptionPlanId, PaymentStatus.Pending);
+                await AddOrUpdatePaymentHistory(sellerId, subscription.Price.Value, DateTime.UtcNow, userPaymentId, subscriptionPlanId, mepaLink.preferenceId, PaymentStatus.Pending);
                 mepaLink.Success = true;
                 return mepaLink;
             }
@@ -49,6 +50,22 @@ namespace ASM.Services
                 Message = "Plano não encontrado."
             };
         }
+
+        public async Task<PaymentLinkResponse> GetPaymentLink(Guid historyId)
+        {
+            var paymentItem = await GetPaymentHistoryItem(historyId);
+            if (paymentItem != null)
+            {
+                var mepaLink = await mepaService.GetPreference(paymentItem.PreferenceId);
+                return mepaLink;
+            }
+            return new PaymentLinkResponse
+            {
+                Success = false,
+                Message = "Link não encontrado."
+            };
+        }
+
         public async Task<PaymentInformation?> GetPaymentInformation(Guid sellerId)
         {
             return await unitOfWork.BillingInformationRepository.GetQueryable().Where(x => x.SellerId == sellerId)
@@ -71,7 +88,7 @@ namespace ASM.Services
             return payment != null && payment.Status == PaymentStatus.Success;
         }
 
-        public async Task<PaymentHistory> AddOrUpdatePaymentHistory(Guid sellerId, decimal price, DateTime createdDate, Guid userPaymentId, Guid subscriptionPlanId, PaymentStatus status, string metaData = default)
+        public async Task<PaymentHistory> AddOrUpdatePaymentHistory(Guid sellerId, decimal price, DateTime createdDate, Guid userPaymentId, Guid subscriptionPlanId, string? preferenceId, PaymentStatus status, string metaData = default)
         {
             var entity = await GetPaymentHistoryItem(sellerId, userPaymentId);
             if (entity == null)
@@ -83,7 +100,9 @@ namespace ASM.Services
                     Price = price,
                     UserPaymentId = userPaymentId,
                     SubscriptionPlanId = subscriptionPlanId,
-                    Status = status
+                    Status = status,
+                    ExpireIn = DateTime.UtcNow.AddHours(4),
+                    PreferenceId = preferenceId
                 };
                 if (metaData != default) entity.MetaData = metaData;
                 unitOfWork.PaymentHistoryRepository.Add(entity);
@@ -117,7 +136,7 @@ namespace ASM.Services
             }
 
             await UpdateBillingInformation(sellerId, baseDate, lastPayment, paymentHistory.SubscriptionPlanId.Value);
-            await AddOrUpdatePaymentHistory(sellerId, price.Value, createdDate, userPaymentId, paymentHistory.SubscriptionPlanId.Value, PaymentStatus.Success);
+            await AddOrUpdatePaymentHistory(sellerId, price.Value, createdDate, userPaymentId, paymentHistory.SubscriptionPlanId.Value, paymentHistory.PreferenceId, PaymentStatus.Success);
             await pushNotificationService.SendPushNotificationAsync(sellerId, "Vendly", "Pagamento efetuado!");
         }
 
@@ -165,15 +184,24 @@ namespace ASM.Services
             return await ExpirateDateValid(sellerId.Value, searchPayment);
         }
 
-        public async Task<List<PaymentHistory>> GetPaymentHistory(Guid sellerId)
+        public async Task<(List<PaymentHistory>, long)> GetPaymentHistory(Guid sellerId, int skip, int take)
         {
-            return await unitOfWork.PaymentHistoryRepository.GetQueryable()
-                .Include(x => x.SubscriptionPlan).Where(x => x.SellerId == sellerId).OrderByDescending(x => x.CreatedDate).ToListAsync();
+            long total = await unitOfWork.PaymentHistoryRepository.GetQueryable().Include(x => x.SubscriptionPlan)
+                .Where(x => x.SellerId == sellerId).LongCountAsync();
+
+            var result =  await unitOfWork.PaymentHistoryRepository.GetQueryable().Include(x => x.SubscriptionPlan)
+                .Where(x => x.SellerId == sellerId).OrderByDescending(x => x.CreatedDate).Skip(skip).Take(take).ToListAsync();
+            return (result, total);
         }
 
         private async Task<PaymentHistory?> GetPaymentHistoryItem(Guid sellerId, Guid userPaymentId)
         {
             return await unitOfWork.PaymentHistoryRepository.GetQueryable().FirstOrDefaultAsync(x => x.UserPaymentId == userPaymentId && x.SellerId == sellerId);
+        }
+
+        private async Task<PaymentHistory?> GetPaymentHistoryItem(Guid historyId)
+        {
+            return await unitOfWork.PaymentHistoryRepository.GetQueryable().FirstOrDefaultAsync(x => x.Id == historyId);
         }
 
         private async Task<PaymentInformation> UpdateBillingInformation(Guid sellerId, DateTime baseDate, DateTime lastPayment, Guid subscribeId)

@@ -12,6 +12,9 @@ namespace ASM.Data.Entities
         public string? MetaData { get; set; }
         public Guid? UserPaymentId { get; set; }
         public PaymentStatus? Status { get; set; }
+        public DateTime ExpireIn { get; set; }
+        public string? PreferenceId { get; set; }
+
 
         public Guid SellerId { get; set; }
 

@@ -12,9 +12,9 @@ namespace ASM.Api.Models
             ExpireIn = pInfo.ExpireIn.Value;
             LastPayment = pInfo.LastPayment;
             SellerId = sellerId;
-            IsFreePeriod = pInfo.SubscriptionPlan.IsFree;
+            IsFreePeriod = pInfo.SubscriptionPlan?.IsFree;
             SubscriptionPlan = pInfo.SubscriptionPlan;
-            Price = pInfo.SubscriptionPlan.Price;
+            Price = pInfo.SubscriptionPlan?.Price;
         }
 
         public DateTime? LastPayment { get; set; }

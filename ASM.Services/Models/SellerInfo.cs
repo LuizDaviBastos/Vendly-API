@@ -1,4 +1,6 @@
-﻿namespace ASM.Services.Models
+﻿using ASM.Data.Entities;
+
+namespace ASM.Services.Models
 {
     public class SellerInfo : RequestResponseBase
     {
@@ -24,6 +26,7 @@
         public SellerReputation seller_reputation { get; set; }
         public Thumbnail thumbnail { get; set; }
         public long ProdutosCount { get; set; }
+        public IList<SellerMessage>? Messages { get; set; }
     }
 
     public class Identification

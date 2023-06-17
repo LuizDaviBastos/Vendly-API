@@ -1,6 +1,8 @@
 ﻿using ASM.Api.Models;
+using ASM.Data.Entities;
 using ASM.Services;
 using ASM.Services.Interfaces;
+using ASM.Services.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -35,16 +37,55 @@ namespace ASM.Api.Controllers
             return Ok(RequestResponse.GetSuccess(subscriptions));
         }
 
+        [HttpGet("CreatePaymentLink")]
+        public async Task<IActionResult> CreatePaymentLink(Guid sellerId, Guid subscriptionPlanId, bool isBinary)
+        {
+            try
+            {
+                var createResponse = await paymentService.GetNewPaymentLink(sellerId, subscriptionPlanId, isBinary);
+                if (!createResponse.Success ?? true)
+                {
+                    return Ok(RequestResponse.GetError(createResponse.Message));
+                }
+
+                return Ok(RequestResponse.GetSuccess(createResponse));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetPaymentLink")]
+        public async Task<IActionResult> GetPaymentLink(Guid historyId)
+        {
+            try
+            {
+                var paymentLink = await paymentService.GetPaymentLink(historyId);
+                if (!paymentLink.Success ?? true)
+                {
+                    return Ok(RequestResponse.GetError(paymentLink.Message));
+                }
+
+                return Ok(RequestResponse.GetSuccess(paymentLink));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet("PaymentHistory")]
-        public async Task<IActionResult> GetPaymentHistory(Guid sellerId)
+        public async Task<IActionResult> GetPaymentHistory([FromQuery] Guid sellerId, int skip, int take)
         {
             List<PaymentHistoryResult> history = new();
-            var result = await paymentService.GetPaymentHistory(sellerId);
+            (List<PaymentHistory> result, long total) = await paymentService.GetPaymentHistory(sellerId, skip, take);
             if(result.Any())
             {
+                
                 history = result.Select(x => new PaymentHistoryResult(x)).ToList();
             }
-            return Ok(RequestResponse.GetSuccess(history));
+            return Ok(RequestResponse.GetSuccess(history, total: total));
         }
     }
 }

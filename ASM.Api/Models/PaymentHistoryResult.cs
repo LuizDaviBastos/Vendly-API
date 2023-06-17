@@ -16,6 +16,7 @@ namespace ASM.Api.Models
             Status = history.Status;
             Plan = history.SubscriptionPlan?.Name;
             SellerId = history.SellerId;
+            ExpireIn = history.ExpireIn;
         }
         public Guid Id { get; set; }
         public DateTime CreatedDate { get; set; }
@@ -24,6 +25,7 @@ namespace ASM.Api.Models
         public Guid? UserPaymentId { get; set; }
         public PaymentStatus? Status { get; set; }
         public string Plan { get; set; }
+        public DateTime ExpireIn { get; set; }
 
         public Guid SellerId { get; set; }
     }

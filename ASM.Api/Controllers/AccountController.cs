@@ -59,8 +59,8 @@ namespace ASM.Api.Controllers
                 }
                 
                 var sellerInfo = await meliService.GetMeliSellerInfo(meliSellerId.Value);
-
-                if(sellerInfo.Success ?? false) return Ok(RequestResponse.GetSuccess(sellerInfo));
+                sellerInfo.Messages = await sellerService.GetMessagesByMeliSellerId(meliSellerId.Value);
+                if (sellerInfo.Success ?? false) return Ok(RequestResponse.GetSuccess(sellerInfo));
                 return BadRequest(RequestResponse.GetError(sellerInfo.Message));
             }
             catch (Exception ex)
@@ -83,24 +83,7 @@ namespace ASM.Api.Controllers
             }
         }
 
-        [HttpGet("GetPaymentLink")]
-        public async Task<IActionResult> GetPaymentLink(Guid sellerId, Guid subscriptionPlanId, bool isBinary)
-        {
-            try
-            {
-                var createResponse = await paymentService.GetNewPaymentLink(sellerId, subscriptionPlanId, isBinary);
-                if (!createResponse.Success ?? true)
-                {
-                    return Ok(RequestResponse.GetError(createResponse.Message));
-                }
-
-                return Ok(RequestResponse.GetSuccess(createResponse));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+       
 
         [HttpGet("ExpiredStatus")]
         public async Task<IActionResult> ExpiredStatus(Guid sellerId)

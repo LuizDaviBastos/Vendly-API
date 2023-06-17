@@ -5,6 +5,7 @@ using MercadoPago.Client.Payment;
 using MercadoPago.Client.Preference;
 using MercadoPago.Config;
 using MercadoPago.Resource;
+using MercadoPago.Resource.Preference;
 using RestSharp;
 
 namespace ASM.Services
@@ -31,6 +32,9 @@ namespace ASM.Services
                 ExternalReference = sellerId.ToString(),
                 NotificationUrl = settings.NotificationPaymentLink,
                 BinaryMode = isBinary,
+                Expires = true,
+                ExpirationDateFrom = DateTime.UtcNow,
+                ExpirationDateTo = DateTime.UtcNow.AddDays(5),
                 Items = new List<PreferenceItemRequest>
                 {
                     new PreferenceItemRequest
@@ -49,8 +53,29 @@ namespace ASM.Services
             response.init_point = preference.InitPoint;
             response.price = subscriptionPlan.Price;
             response.Success = true;
-            response.id = preference.Id;
+            response.preferenceId = preference.Id;
 
+            return response;
+        }
+
+        public async Task<PaymentLinkResponse> GetPreference(string preferenceId)
+        {
+            PaymentLinkResponse response = new();
+            var settings = await settingsService.GetAppSettingsAsync();
+            MercadoPagoConfig.AccessToken = settings.MePaToken;
+
+            var client = new PreferenceClient();
+            var preference = await client.GetAsync(preferenceId);
+            response.Success = !string.IsNullOrEmpty(preference.Id);
+            if (response.Success == true)
+            {
+                response.init_point = preference.InitPoint;
+                response.price = preference.Items.First().UnitPrice;
+            }
+            else
+            {
+                response.Message = "Preferência não encontrada";
+            }
             return response;
         }
 
@@ -71,24 +96,9 @@ namespace ASM.Services
                 },
                 Limit = limit,
             });
-            
+
             return paymentResponse;
         }
-
-        public async Task<PaymentLinkResponse> GetPreference(string preferenceId)
-        {
-            PaymentLinkResponse response = new();
-            var settings = await settingsService.GetAppSettingsAsync();
-            MercadoPagoConfig.AccessToken = settings.MePaToken;
-
-            var client = new PreferenceClient();
-            var preference = await client.GetAsync(preferenceId);
-            response.init_point = preference.InitPoint;
-            response.price = preference.Items.First().UnitPrice;
-
-            return response;
-        }
-
 
         public async Task<PaymentResponse> GetPaymentInformation(string paymentId)
         {

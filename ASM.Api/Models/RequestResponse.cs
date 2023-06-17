@@ -6,6 +6,7 @@ namespace ASM.Api.Models
     public class RequestResponse<T> : RequestResponse
     {
         public T? Data { get; set; }
+        public long? Total { get; set; }
     }
 
     public class RequestResponse
@@ -24,13 +25,14 @@ namespace ASM.Api.Models
             };
         }
 
-        public static RequestResponse<T> GetSuccess<T>([Optional] T? data, [Optional] string? message)
+        public static RequestResponse<T> GetSuccess<T>([Optional] T? data, [Optional] string? message, [Optional] long? total)
         {
             return new()
             {
                 Message = message,
                 Data = data,
-                Success = true
+                Success = true,
+                Total = total
             };
         }
 

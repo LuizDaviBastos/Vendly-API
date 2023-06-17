@@ -12,6 +12,7 @@ namespace ASM.Services.Interfaces
         Task<(string, bool)> AddMeliAccount(Guid sellerId, AccessToken accessToken);
         Task<(MeliAccount?, bool)> UpdateTokenMeliAccount(AccessToken accessToken);
         Task<SellerMessage?> GetMessageByMeliSellerId(long meliSellerId, MessageType messageType);
+        Task<IList<SellerMessage>?> GetMessagesByMeliSellerId(long meliSellerId);
         Task<Seller?> GetSellerAndMeliAccounts(Guid sellerId);
         Task<bool> HasMeliAccount(Guid sellerId);
         Task<(string, bool)> ConfirmEmailAsync(Guid sellerId, string code);
