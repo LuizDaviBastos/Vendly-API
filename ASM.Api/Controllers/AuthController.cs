@@ -141,7 +141,7 @@ namespace ASM.Api.Controllers
                     return Ok(RequestResponse.GetSuccess(loginResponse));
                 }
 
-                return Unauthorized(RequestResponse.GetError(loginResponse.Message));
+                return Ok(RequestResponse.GetError(loginResponse.Message));
             }
             catch (Exception ex)
             {

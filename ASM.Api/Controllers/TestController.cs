@@ -35,9 +35,9 @@ namespace ASM.Api.Controllers
         }
 
         [HttpGet(nameof(TestNotification))]
-        public async Task<IActionResult> TestNotification(string fcmToken)
+        public async Task<IActionResult> TestNotification(string fcmToken, long id)
         {
-            await fcmService.SendPushNotificationAsync(new List<string> { fcmToken }, "Test", "Test Body");
+            await fcmService.SendPushNotificationAsync(new List<string> { fcmToken }, "Vendly", "Parece que seu plano expirou. Continue com o plano e não deixe seus clientes esperando.", id);
             return Ok();
         }
 

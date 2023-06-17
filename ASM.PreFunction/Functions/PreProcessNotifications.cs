@@ -18,20 +18,26 @@ namespace ASM.PreFunction.Functions
         private readonly IMeliService meliService;
         private readonly ISellerService sellerService;
         private readonly PaymentService paymentService;
+        private readonly PushNotificationService pushNotificationService;
 
-        public PreProcessNotifications(IStorageService storageService, IMeliService meliService, ISellerService sellerService, PaymentService paymentService)
+        public PreProcessNotifications(IStorageService storageService, IMeliService meliService, ISellerService sellerService, PaymentService paymentService, PushNotificationService pushNotificationService)
         {
             this.storageService = storageService;
             this.meliService = meliService;
             this.sellerService = sellerService;
             this.paymentService = paymentService;
+            this.pushNotificationService = pushNotificationService;
         }
 
         [FunctionName("PreProcessNotifications")]
         public async Task Run([QueueTrigger("pre-process-notifications")] NotificationTrigger notification, ILogger log)
         {
             var status = await paymentService.ExpirateDateValid(notification.user_id);
-            if (!status.NotExpired) return;
+            if (!status.NotExpired)
+            {
+                await pushNotificationService.SendPushNotificationAsync(notification.user_id, "Vendly", "Parece que seu plano expirou. Continue com o plano e não deixe seus clientes esperando.", 1293);
+                return;
+            }
 
             if (notification.IsOrderV2)
             {

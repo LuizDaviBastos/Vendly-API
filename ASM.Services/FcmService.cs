@@ -12,7 +12,7 @@ namespace ASM.Services
             this.settingsService = settingsService;
         }
 
-        public async Task SendPushNotificationAsync(List<string> tokens, string title, string body, Priority priority = Priority.Normal)
+        public async Task SendPushNotificationAsync(List<string> tokens, string title, string body, long? id = null, Priority priority = Priority.Normal)
         {
             var settings = await settingsService.GetAppSettingsAsync();
             using (var sender = new Sender(settings.FcmServerKey ?? key))
@@ -26,6 +26,10 @@ namespace ASM.Services
                         Title = title,
                         Body = body
                     },
+                    Data = new
+                    {
+                        id = id
+                    }
                 };
 
                 var result = await sender.SendAsync(message);

@@ -1,5 +1,6 @@
 ﻿using ASM.Data.Interfaces;
 using FCM.Net;
+using Microsoft.EntityFrameworkCore;
 
 namespace ASM.Services
 {
@@ -14,10 +15,19 @@ namespace ASM.Services
             this.fcmService = fcmService;
         }
 
-        public async Task SendPushNotificationAsync(Guid sellerId, string title, string body, Priority priority = Priority.Normal)
+        public async Task SendPushNotificationAsync(Guid sellerId, string title, string body, long? id = null, Priority priority = Priority.Normal)
         {
             var tokens = await unitOfWork.SellerFcmTokenRepository.GetTokens(sellerId);
-            await fcmService.SendPushNotificationAsync(tokens, title, body, priority);
+            await fcmService.SendPushNotificationAsync(tokens, title, body, id, priority);
+        }
+
+        public async Task SendPushNotificationAsync(long meliSellerId, string title, string body, long? id = null, Priority priority = Priority.Normal)
+        {
+            var sellerId = await unitOfWork.MeliAccountRepository.GetQueryable().Where(x => x.MeliSellerId == meliSellerId).Select(x => x.SellerId).FirstOrDefaultAsync();
+            if(sellerId.HasValue)
+            {
+                await SendPushNotificationAsync(sellerId.Value, title, body, id, priority); 
+            }
         }
     }
 
