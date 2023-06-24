@@ -77,9 +77,10 @@ namespace ASM.Services
             return await unitOfWork.SubscriptionPlanRepository.GetQueryable().FirstOrDefaultAsync(expression);
         }
 
-        public async Task<List<SubscriptionPlan>> GetSubscriptionPlanAsync(bool includeFreePlans = false)
+        public async Task<List<SubscriptionPlan>> GetSubscriptionPlanAsync(bool? isFree = false)
         {
-            return await unitOfWork.SubscriptionPlanRepository.GetQueryable().Where(x => x.IsFree == false && x.IsFree == includeFreePlans).ToListAsync();
+            isFree = isFree ?? false;
+            return await unitOfWork.SubscriptionPlanRepository.GetQueryable().Where(x => x.IsFree == isFree).ToListAsync();
         }
 
         public async Task<bool> PaymentProcessed(Guid userPaymentId)
@@ -101,7 +102,7 @@ namespace ASM.Services
                     UserPaymentId = userPaymentId,
                     SubscriptionPlanId = subscriptionPlanId,
                     Status = status,
-                    ExpireIn = DateTime.UtcNow.AddHours(4),
+                    ExpireIn = DateTime.UtcNow.AddDays(5),
                     PreferenceId = preferenceId
                 };
                 if (metaData != default) entity.MetaData = metaData;

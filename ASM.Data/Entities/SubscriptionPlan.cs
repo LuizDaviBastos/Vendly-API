@@ -13,6 +13,7 @@ namespace ASM.Data.Entities
         public bool IsFree { get; set; }
         public int ValidateValue { get; set; }
         public ValidateType ValidateType { get; set; }
+        public string? Description { get; set; }
 
         [JsonIgnore]
         public virtual IList<PaymentHistory> PaymentHistories { get; set; }

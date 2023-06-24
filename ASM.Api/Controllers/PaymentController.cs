@@ -31,9 +31,9 @@ namespace ASM.Api.Controllers
         }
 
         [HttpGet("SubscriptionList")]
-        public async Task<IActionResult> GetSubscriptionList() 
+        public async Task<IActionResult> GetSubscriptionList(bool? isFree) 
         {
-            var subscriptions = await paymentService.GetSubscriptionPlanAsync();
+            var subscriptions = await paymentService.GetSubscriptionPlanAsync(isFree);
             return Ok(RequestResponse.GetSuccess(subscriptions));
         }
 
