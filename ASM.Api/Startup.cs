@@ -43,6 +43,7 @@ namespace ASM.Api
                 options.Password.RequiredLength = 8;
                 options.User.RequireUniqueEmail = true;
                 options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
                 options.SignIn.RequireConfirmedEmail = true;
                 options.Password.RequireNonAlphanumeric = true;
                 /*

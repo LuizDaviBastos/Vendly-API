@@ -68,6 +68,11 @@ namespace ASM.Api.Controllers
                     return BadRequest(RequestResponse.GetError("User not found"));
                 }
 
+                if(user.IsTestUser == true)
+                {
+                    return Ok(RequestResponse.GetSuccess());
+                }
+
                 Dictionary<bool, (MeliAccount, string)> status = await meliService.RevokeMeliAccounts(user.MeliAccounts);
                 await sellerService.DeleteAccount(user);
 

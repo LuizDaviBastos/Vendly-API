@@ -122,6 +122,10 @@ namespace ASM.Services
         public async Task<(string, bool)> SendEmailConfirmationCode(Guid sellerId)
         {
             var entity = unitOfWork.SellerRepository.Get(sellerId);
+            if (entity?.IsTestUser == true)
+            {
+                return ("", true);
+            }
             if (entity != null)
             {
                 string code = Utils.GetRandomCode().ToString();
@@ -143,7 +147,12 @@ namespace ASM.Services
         public async Task<(string, bool)> ConfirmEmailAsync(Guid sellerId, string code)
         {
             var entity = unitOfWork.SellerRepository.Get(sellerId);
-            if (entity != null)
+            if (entity?.IsTestUser == true)
+            {
+                if(code == "000000") return ("", true);
+                return ("Código inválido", false);
+            }
+            else if (entity != null)
             {
                 if (entity.ConfirmationCode == code)
                 {

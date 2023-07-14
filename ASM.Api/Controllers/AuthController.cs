@@ -234,7 +234,7 @@ namespace ASM.Api.Controllers
                     return Ok(RequestResponse.GetSuccess());
                 }
 
-                return BadRequest(RequestResponse.GetError(result.Item1));
+                return Ok(RequestResponse.GetError(result.Item1));
             }
             catch (Exception ex)
             {
@@ -266,7 +266,7 @@ namespace ASM.Api.Controllers
                     return Ok(RequestResponse.GetSuccess());
                 }
 
-                return BadRequest(RequestResponse.GetError(result.Item1));
+                return Ok(RequestResponse.GetError(result.Item1));
             }
             catch (Exception ex)
             {
